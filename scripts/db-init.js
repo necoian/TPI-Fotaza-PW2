@@ -22,18 +22,28 @@ async function inicializarBD() {
         });
 
         const dbNombre = process.env.DB_NAME || 'fotaza_db';
-        await conexion.query(`CREATE DATABASE IF NOT EXISTS \`${dbNombre}\`;`);
+
+        const [rows] = await conexion.query(`SHOW DATABASES LIKE '${dbNombre}'`);
+        
+        if (rows.length > 0) {
+            console.log("La base de datos ya existe.");
+            return;
+        }
+
+        
+        await conexion.query(`CREATE DATABASE \`${dbNombre}\`;`);
         console.log(`Base de Datos '${dbNombre}' en funcionamiento`);
 
         //seleccionamos la base
         await conexion.query(`USE \`${dbNombre}\`;`);
 
         //Toda la estructura base de datos ------------------------------
-
+   
         const pathBase = path.join(__dirname, 'fotaza_db.sql');
         const fotaza_db = fs.readFileSync(pathBase, 'utf8');
         await conexion.query(fotaza_db);
-        console.log("Estructura de la base en funcionamiento");
+        
+        console.log("estructura creada");
 
         //fin estructura base de datos ------------------------------
 
