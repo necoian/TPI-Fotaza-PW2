@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 31-05-2026 a las 03:23:26
+-- Tiempo de generación: 01-06-2026 a las 01:53:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `fotaza_db`
+-- Base de datos: `fotaza_db_ian`
 --
 
 -- --------------------------------------------------------
@@ -119,45 +119,6 @@ CREATE TABLE `image_report` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Disparadores `image_report`
---
-DELIMITER $$
-CREATE TRIGGER `after_image_report_insert` AFTER INSERT ON `image_report` FOR EACH ROW BEGIN
-    
-    UPDATE POST
-    SET report_count = report_count + 1
-    WHERE Id = (SELECT post_ID FROM IMAGES WHERE ID = NEW.image_id);
-
-    
-    UPDATE POST
-    SET is_blocked = 1
-    WHERE Id = (SELECT post_ID FROM IMAGES WHERE ID = NEW.image_id);
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `after_report_check_limit` AFTER INSERT ON `image_report` FOR EACH ROW BEGIN
-    DECLARE v_post_id INT;
-    DECLARE v_count INT;
-
-    
-    SELECT post_ID INTO v_post_id FROM IMAGES WHERE ID = NEW.image_id;
-
-    
-    SELECT COUNT(*) INTO v_count 
-    FROM IMAGE_REPORT ir
-    JOIN IMAGES i ON ir.image_id = i.ID
-    WHERE i.post_ID = v_post_id;
-
-   
-    IF v_count = 3 THEN
-        INSERT IGNORE INTO VALIDATOR_QUEUE (post_id, status) VALUES (v_post_id, 'pending');
-    END IF;
-END
-$$
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
@@ -220,33 +181,6 @@ CREATE TABLE `post` (
   `report_count` int(11) DEFAULT 0,
   `is_blocked` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Disparadores `post`
---
-DELIMITER $$
-CREATE TRIGGER `after_post_status_update` AFTER UPDATE ON `post` FOR EACH ROW BEGIN
-    DECLARE v_removed_count INT;
-
-    
-    IF NEW.status = 'remove' AND OLD.status != 'remove' THEN
-        
-        
-        SELECT COUNT(*) INTO v_removed_count
-        FROM POST
-        WHERE user_id = NEW.user_id AND status = 'remove';
-
-        
-        IF v_removed_count >= 3 THEN
-            UPDATE USUARIO
-            SET is_active = 0
-            WHERE ID = NEW.user_id;
-        END IF;
-        
-    END IF;
-END
-$$
-DELIMITER ;
 
 -- --------------------------------------------------------
 

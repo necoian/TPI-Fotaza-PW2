@@ -3,6 +3,55 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+//Triggers
+async function ejecutarTriggers(conexion) {
+    console.log("Creando triggers");
+    
+    const triggers = [
+        `CREATE TRIGGER after_image_report_insert AFTER INSERT ON image_report 
+         FOR EACH ROW 
+         BEGIN
+            UPDATE POST SET report_count = report_count + 1, is_blocked = 1 
+            WHERE Id = (SELECT post_ID FROM IMAGES WHERE ID = NEW.image_id);
+         END;`,
+
+        `CREATE TRIGGER after_report_check_limit AFTER INSERT ON image_report 
+         FOR EACH ROW 
+         BEGIN
+            DECLARE v_post_id INT;
+            DECLARE v_count INT;
+            SELECT post_ID INTO v_post_id FROM IMAGES WHERE ID = NEW.image_id;
+            SELECT COUNT(*) INTO v_count FROM IMAGE_REPORT ir 
+            JOIN IMAGES i ON ir.image_id = i.ID WHERE i.post_ID = v_post_id;
+            IF v_count >= 3 THEN
+                INSERT IGNORE INTO VALIDATOR_QUEUE (post_id, status) VALUES (v_post_id, 'pending');
+            END IF;
+         END;`,
+
+        `CREATE TRIGGER after_post_status_update AFTER UPDATE ON post 
+         FOR EACH ROW 
+         BEGIN
+            DECLARE v_removed_count INT;
+            IF NEW.status = 'remove' AND OLD.status != 'remove' THEN
+                SELECT COUNT(*) INTO v_removed_count FROM POST 
+                WHERE user_id = NEW.user_id AND status = 'remove';
+                IF v_removed_count >= 3 THEN
+                    UPDATE USUARIO SET is_active = 0 WHERE ID = NEW.user_id;
+                END IF;
+            END IF;
+         END;`
+    ];
+
+    for (const sql of triggers) {
+        try {
+            await conexion.query(sql);
+            console.log("Trigger creado correctamente");
+        } catch (err) {
+            console.error("Error creando trigger:", err.message);
+        }
+    }
+}
+
 //Inicializamos la base de datos 
 async function inicializarBD() {
 
@@ -21,7 +70,7 @@ async function inicializarBD() {
 
         });
 
-        const dbNombre = process.env.DB_NAME || 'fotaza_db';
+        const dbNombre = process.env.DB_NAME || 'fotaza_db_ian';
 
         const [rows] = await conexion.query(`SHOW DATABASES LIKE '${dbNombre}'`);
         
@@ -39,11 +88,15 @@ async function inicializarBD() {
 
         //Toda la estructura base de datos ------------------------------
    
-        const pathBase = path.join(__dirname, 'fotaza_db.sql');
-        const fotaza_db = fs.readFileSync(pathBase, 'utf8');
-        await conexion.query(fotaza_db);
+        console.log("Por favor aguarde hasta que se cree la estructura");
+        const pathBase = path.join(__dirname, '../database/fotaza_db_ian.sql');
+        const fotaza_db_ian = fs.readFileSync(pathBase, 'utf8');
+        await conexion.query(fotaza_db_ian);
+
         
         console.log("estructura creada");
+        await ejecutarTriggers(conexion); //se colocan aparte porque no se puede ejecutar desde el .sql
+        
 
         //fin estructura base de datos ------------------------------
 

@@ -4,7 +4,7 @@ exports.index = async (req , res) => {
 
     try {
 
-        const [registros] = await db.execute('SELECT * FROM post');
+        const [registros] = await db.execute('SELECT * FROM images');
 
         res.render('index' , {fotos : registros});
         
