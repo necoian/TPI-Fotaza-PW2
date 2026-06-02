@@ -52,6 +52,40 @@ async function ejecutarTriggers(conexion) {
     }
 }
 
+//Volcar los datos en las estructuras
+async function ejecutarSeeds(conexion) {
+
+    console.log("Cargando los datos a las estructuras");
+    const seedsPath = path.join(__dirname, '../database/seeds');
+
+    //leer archivos en orden
+    const archivos = fs.readdirSync(seedsPath).sort();
+
+    for (const archivo of archivos) {
+
+        if (archivo.endsWith('.sql')) {
+
+            const filePath = path.join(seedsPath, archivo);
+            const sql = fs.readFileSync(filePath, 'utf8');
+
+            try {
+                await conexion.query("SET FOREIGN_KEY_CHECKS = 0;  " );
+                await conexion.query(sql);
+                await conexion.query("SET FOREIGN_KEY_CHECKS = 1; ");
+
+                console.log(`Datos de ${archivo} cargado`);
+
+            } catch (error) {
+                console.log(`Error al cargar ${archivo} :`, error.message);
+            }
+
+        }
+
+
+    }
+    
+}
+
 //Inicializamos la base de datos 
 async function inicializarBD() {
 
@@ -96,7 +130,7 @@ async function inicializarBD() {
         
         console.log("estructura creada");
         await ejecutarTriggers(conexion); //se colocan aparte porque no se puede ejecutar desde el .sql
-        
+        await ejecutarSeeds(conexion); //coloca los datos de las estructuras para ejemplificar el TPI
 
         //fin estructura base de datos ------------------------------
 
