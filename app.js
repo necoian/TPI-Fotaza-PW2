@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const db = require('./config/db');
+const session = require('express-session');
 const app = express();
 
 
@@ -9,14 +10,38 @@ const app = express();
     process.exit(1);
 }*/
 
+//Midleware de sesión
+app.use(session({
+
+    secret: process.env.SESSION_SECRET || 'clave_secreta_fotaza',
+    resave: false,
+    saveUninitialized:  false,
+    cookie: {
+        secure: false,
+        maxAge: 3600000 //tiempo de vida de sesión
+    }        
+
+}));
+
+app.use((req, res, next) => { 
+
+    res.locals.usuarioLogueado = req.session.usuario || null;
+    next();
+
+});
+
 //Rutas
 const indexRoutes = require('./routes/index');
+const authRoutes = require('./routes/auth');
 
 //PUG 
 app.set('view engine', 'pug');
 
+//middleware que posibilita la lectura de formularios
+app.use(express.urlencoded({extended = true}));
 //uso de las rutas
 app.use('/', indexRoutes);
+app.use('/login', authRoutes);
 
 //Para testear
 app.get('/test-db', async (req, res) => {
