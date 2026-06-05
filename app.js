@@ -33,15 +33,18 @@ app.use((req, res, next) => {
 //Rutas
 const indexRoutes = require('./routes/index');
 const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/post');
 
 //PUG 
 app.set('view engine', 'pug');
 
 //middleware que posibilita la lectura de formularios
-app.use(express.urlencoded({extended = true}));
+app.use(express.urlencoded({extended : true}));
 //uso de las rutas
 app.use('/', indexRoutes);
 app.use('/login', authRoutes);
+app.use('/publicar', postRoutes);
+
 
 //Para testear
 app.get('/test-db', async (req, res) => {

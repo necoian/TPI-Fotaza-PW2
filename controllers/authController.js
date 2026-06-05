@@ -6,14 +6,14 @@ exports.mostrarLogin = (req, res) => {
     res.render('login');
 }
 
-exports.procesarLogin = (req, res) => {
+exports.procesarLogin = async (req, res) => {
 
-    const {userName, password} = req.body;
+    const {username, password} = req.body;
 
     try {
 
         const [usuarios] = await db.execute(
-            'SELECT * FROM usuario WHERE UserName = ? OR email = ?', [userName, userName]
+            'SELECT * FROM usuario WHERE UserName = ? OR email = ?', [username, username]
         ); //Se pregunta si el username colocado ( tanto sea el username o el email coinciden)
 
         if (usuarios.length === 0) {
@@ -31,7 +31,7 @@ exports.procesarLogin = (req, res) => {
 
         req.session.usuario = {
             id: usuarioEncontrado.ID,
-            userName: usuarioEncontrado.userName,
+            UserName: usuarioEncontrado.UserName,
             role: usuarioEncontrado.role_id === 1 ? 'Administrador' : 'Usuario'
         }
 
