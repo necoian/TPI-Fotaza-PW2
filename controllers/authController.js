@@ -13,7 +13,7 @@ exports.procesarLogin = async (req, res) => {
     try {
 
         const [usuarios] = await db.execute(
-            'SELECT * FROM usuario WHERE UserName = ? OR email = ?', [username, username]
+            'SELECT * FROM usuario WHERE UserName = $1 OR email = $2', [username, username]
         ); //Se pregunta si el username colocado ( tanto sea el username o el email coinciden)
 
         if (usuarios.length === 0) {

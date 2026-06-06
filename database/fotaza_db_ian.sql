@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 01-06-2026 a las 01:53:43
+-- Tiempo de generación: 06-06-2026 a las 21:13:56
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -97,7 +97,7 @@ CREATE TABLE `followers` (
 CREATE TABLE `images` (
   `ID` int(11) NOT NULL,
   `post_ID` int(11) NOT NULL,
-  `file_path` varchar(255) NOT NULL,
+  `file_path` longtext NOT NULL,
   `license` enum('free','copyright') NOT NULL,
   `watermark_text` varchar(255) DEFAULT NULL,
   `order_index` int(11) DEFAULT 0,
