@@ -12,48 +12,45 @@ exports.procesarLogin = async (req, res) => {
 
     try {
 
-        const [usuarios] = await db.execute(
-            'SELECT * FROM usuario WHERE UserName = $1 OR email = $2', [username, username]
-        ); //Se pregunta si el username colocado ( tanto sea el username o el email coinciden)
+        const query = 'SELECT * FROM usuario WHERE "UserName" = $1 OR email = $2';
+
+        const resultado = await db.query(query, [username, username]); 
+        
+        const usuarios = resultado.rows;
 
         if (usuarios.length === 0) {
-            return res.render('login', {error: 'credenciales invalidas'})
+            return res.render('login', { error: 'Credenciales inválidas' });
         }
 
         const usuarioEncontrado = usuarios[0];
 
-        //se compara con el codigo hash
         const coincidePassword = await bcrypt.compare(password, usuarioEncontrado.Password_hash);
 
         if (!coincidePassword) {
-            return res.render('login', { error: 'Contraseña erronea.' });
+            return res.render('login', { error: 'Contraseña errónea.' });
         }
 
         req.session.usuario = {
-            id: usuarioEncontrado.ID,
+            id: usuarioEncontrado.id, 
             UserName: usuarioEncontrado.UserName,
             role: usuarioEncontrado.role_id === 1 ? 'Administrador' : 'Usuario'
-        }
+        };
 
-        res.redirect('/'); //Inicio
+        res.redirect('/');
 
     } catch (error) {
-        console.error(error);
+        console.error("Error crítico en el proceso de login:", error);
         res.status(500).send('Error desde el servidor');
     }
-
 };
 
 exports.cerrarSesion = (req, res) => {
 
     req.session.destroy((err) => {
-
+        
         if (err) {
             return res.send('Error al cerrar sesión');
-
         }
-
-        res.redirect('/');//Volvemos a inicio 
+        res.redirect('/'); 
     });
-
 };

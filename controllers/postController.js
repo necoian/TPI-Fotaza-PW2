@@ -10,8 +10,7 @@ exports.mostrarFormulario = (req, res) => {
 exports.guardarPublicacion = async (req, res) => {
 
 
-
-    let conexion = null;
+    let clienteT = null;
     let contenidoImagen = null;
 
 
@@ -63,9 +62,7 @@ exports.guardarPublicacion = async (req, res) => {
                 });
             };
 
-
             const resultadoCloudinary = await subirACloudinary();
-
 
             console.log("=== RESPUESTA DE CLOUDINARY ===");
             console.log(resultadoCloudinary);
@@ -75,7 +72,7 @@ exports.guardarPublicacion = async (req, res) => {
             contenidoImagen = resultadoCloudinary.secure_url || resultadoCloudinary.url || null;
         } else {
 
-            console.log("Detectado: No hay credenciales. Usando conversión local a Base64 para el Profesor...");
+            console.log("Detectado: No hay credenciales de Cloudinary. Usando conversión local a Base64");
             
             
             const imagenBase64 = req.file.buffer.toString('base64');
@@ -86,32 +83,33 @@ exports.guardarPublicacion = async (req, res) => {
 
         }
 
-
-
-
-        if (!urlImagenReal) {
-            throw new Error("Cloudinary no devolvió una URL válida para la imagen");
+        
+        if (!contenidoImagen) {
+            throw new Error("No se pudo procesar el contenido de la imagen");
         }
 
-        conexion = await db.getConnection();
-        await conexion.beginTransaction();
+        clienteT = await db.connect();
+
+        await clienteT.query('BEGIN');
+
         //consulta SQL para insertar el post
         const queryPost = `
             INSERT INTO post (user_id, title, description, status, comments_open, created_at) 
-            VALUES ($1, $1, $1, 'active', 1, NOW())
+            VALUES ($1, $2, $3, 'active', true, NOW())
+            RETURNING "Id"
         `;
         //se ejecuta la orden
-        const [resultadoPost] = await conexion.execute(queryPost, [
+        const [resultadoPost] = await clienteT.execute(queryPost, [
             userId,
             title,
             description
         ]);
 
-        const nuevoPostId = resultadoPost.insertId;
+        const nuevoPostId = resultadoPost.rows[0].Id;
 
         //para la imagen
         const queryImage = `
-            INSERT INTO images (post_ID, file_path, license, watermark_text, order_index, created_at) 
+            INSERT INTO images ("post_ID", file_path, license, watermark_text, order_index, created_at) 
             VALUES ($1, $2, $3, $4, 0, NOW())
         `;
 
@@ -122,9 +120,8 @@ exports.guardarPublicacion = async (req, res) => {
             watermarkText
         ]);
 
-        await conexion.commit();
+        await clienteTransaccion.query('COMMIT');
         console.log("Post guardado de forma completa en la Base de Datos");
-        conexion.release();
 
         res.redirect('/');
 
@@ -147,8 +144,9 @@ exports.guardarPublicacion = async (req, res) => {
 
     }
     finally {
-        if (conexion) {
-            conexion.release();
+        if (clienteT) {
+            clienteT.release();
+            console.log("Cliente de transacción liberado");
         }
     }
 

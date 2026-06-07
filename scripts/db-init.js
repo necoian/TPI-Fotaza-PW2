@@ -1,149 +1,137 @@
 require('dotenv').config();
-const mysql = require('mysql2/promise');
+const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-//Triggers
-async function ejecutarTriggers(conexion) {
-    console.log("Creando triggers");
-    
-    const triggers = [
-        `CREATE TRIGGER after_image_report_insert AFTER INSERT ON image_report 
-         FOR EACH ROW 
-         BEGIN
-            UPDATE POST SET report_count = report_count + 1, is_blocked = 1 
-            WHERE Id = (SELECT post_ID FROM IMAGES WHERE ID = NEW.image_id);
-         END;`,
+const sqlPath = path.join(process.cwd(), 'database', 'fotaza_db_ian.sql');
+const DB_NAME = (!process.env.DB_NAME || process.env.DB_NAME === 'postgres') ? 'fotaza_db_ian' : process.env.DB_NAME;
 
-        `CREATE TRIGGER after_report_check_limit AFTER INSERT ON image_report 
-         FOR EACH ROW 
-         BEGIN
-            DECLARE v_post_id INT;
-            DECLARE v_count INT;
-            SELECT post_ID INTO v_post_id FROM IMAGES WHERE ID = NEW.image_id;
-            SELECT COUNT(*) INTO v_count FROM IMAGE_REPORT ir 
-            JOIN IMAGES i ON ir.image_id = i.ID WHERE i.post_ID = v_post_id;
-            IF v_count >= 3 THEN
-                INSERT IGNORE INTO VALIDATOR_QUEUE (post_id, status) VALUES (v_post_id, 'pending');
-            END IF;
-         END;`,
+function parsearConsultasSql(sqlText) {
+    const lines = sqlText.split('\n');
+    const queries = [];
+    let currentQuery = '';
+    let inDollarBlock = false;
 
-        `CREATE TRIGGER after_post_status_update AFTER UPDATE ON post 
-         FOR EACH ROW 
-         BEGIN
-            DECLARE v_removed_count INT;
-            IF NEW.status = 'remove' AND OLD.status != 'remove' THEN
-                SELECT COUNT(*) INTO v_removed_count FROM POST 
-                WHERE user_id = NEW.user_id AND status = 'remove';
-                IF v_removed_count >= 3 THEN
-                    UPDATE USUARIO SET is_active = 0 WHERE ID = NEW.user_id;
-                END IF;
-            END IF;
-         END;`
-    ];
+    for (let line of lines) {
+        const trimmed = line.trim();
 
-    for (const sql of triggers) {
-        try {
-            await conexion.query(sql);
-            console.log("Trigger creado correctamente");
-        } catch (err) {
-            console.error("Error creando trigger:", err.message);
+        if (trimmed.startsWith('--') || trimmed.startsWith('\\') || trimmed === '') {
+            continue;
         }
-    }
-}
 
-//Volcar los datos en las estructuras
-async function ejecutarSeeds(conexion) {
+        if (trimmed.toUpperCase().startsWith('SET ') || trimmed.toUpperCase().startsWith('SELECT PG_CATALOG.SET_CONFIG')) {
+            continue;
+        }
 
-    console.log("Cargando los datos a las estructuras");
-    const seedsPath = path.join(__dirname, '../database/seeds');
+        currentQuery += line + '\n';
 
-    //leer archivos en orden
-    const archivos = fs.readdirSync(seedsPath).sort();
+        if (line.includes('$$') || line.includes('$function$')) {
+            inDollarBlock = !inDollarBlock;
+        }
 
-    for (const archivo of archivos) {
-
-        if (archivo.endsWith('.sql')) {
-
-            const filePath = path.join(seedsPath, archivo);
-            const sql = fs.readFileSync(filePath, 'utf8');
-
-            try {
-                await conexion.query("SET FOREIGN_KEY_CHECKS = 0;  " );
-                await conexion.query(sql);
-                await conexion.query("SET FOREIGN_KEY_CHECKS = 1; ");
-
-                console.log(`Datos de ${archivo} cargado`);
-
-            } catch (error) {
-                console.log(`Error al cargar ${archivo} :`, error.message);
+        if (trimmed.endsWith(';') && !inDollarBlock) {
+            if (currentQuery.trim()) {
+                queries.push(currentQuery.trim());
             }
-
+            currentQuery = '';
         }
-
-
     }
-    
+
+    if (currentQuery.trim()) {
+        queries.push(currentQuery.trim());
+    }
+    return queries;
 }
 
-//Inicializamos la base de datos 
-async function inicializarBD() {
-
-    let conexion;
+async function inicializarBaseDeDatos() {
+    const clientInicial = new Client({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD,
+        database: 'postgres',
+        port: process.env.DB_PORT || 5432,
+    });
 
     try {
+        console.log('Leyendo archivo SQL local');
+        if (!fs.existsSync(sqlPath)) {
+            throw new Error(`No se encontró el archivo SQL en: ${sqlPath}`);
+        }
+        const sqlTexto = fs.readFileSync(sqlPath, 'utf8');
 
-        console.log("Se inicializa la configuracion de la base de datos");
+        console.log('Conectando al servidor Postgres local');
+        await clientInicial.connect();
 
-        conexion = await mysql.createConnection({
+        console.log(`Recreando base de datos desde cero (${DB_NAME})`);
+        await clientInicial.query(`
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            WHERE pg_stat_activity.datname = '${DB_NAME}' AND pid <> pg_backend_pid();
+        `);
+        await clientInicial.query(`DROP DATABASE IF EXISTS ${DB_NAME};`);
+        await clientInicial.query(`CREATE DATABASE ${DB_NAME};`);
+        await clientInicial.end();
 
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
+        console.log(`Conectando a la nueva base de datos '${DB_NAME}'`);
+        const clientFinal = new Client({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'postgres',
             password: process.env.DB_PASSWORD,
-            multipleStatements: true
-
+            database: DB_NAME,
+            port: process.env.DB_PORT || 5432,
         });
 
-        const dbNombre = process.env.DB_NAME || 'fotaza_db_ian';
+        await clientFinal.connect();
 
-        const [rows] = await conexion.query(`SHOW DATABASES LIKE '${dbNombre}'`);
-        
-        if (rows.length > 0) {
-            console.log("La base de datos ya existe.");
-            return;
+        console.log('trigger');
+        // Creamos las funciones en el Postgres local antes de leer el archivo .sql
+        await clientFinal.query(`
+            CREATE OR REPLACE FUNCTION public.fn_after_image_report_insert()
+            RETURNS trigger LANGUAGE plpgsql AS $$
+            DECLARE
+                v_post_id integer;
+            BEGIN
+                SELECT post_id INTO v_post_id FROM public.images WHERE id = NEW.image_id;
+                IF v_post_id IS NOT NULL THEN
+                    UPDATE public.post SET report_count = report_count + 1 WHERE id = v_post_id;
+                END IF;
+                RETURN NEW;
+            END; $$;
+        `);
+
+        await clientFinal.query(`
+            CREATE OR REPLACE FUNCTION public.fn_after_post_status_update()
+            RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN
+                IF NEW.status = 'pending' THEN
+                    INSERT INTO public.validator_queue (post_id, status)
+                    VALUES (NEW.id, 'pending')
+                    ON CONFLICT (post_id) DO NOTHING;
+                END IF;
+                RETURN NEW;
+            END; $$;
+        `);
+
+        console.log('Procesando e insertando sentencias SQL');
+        const consultas = parsearConsultasSql(sqlTexto);
+
+        for (let i = 0; i < consultas.length; i++) {
+            try {
+                await clientFinal.query(consultas[i]);
+            } catch (err) {
+                if (!consultas[i].toUpperCase().includes('OWNER TO')) {
+                    console.warn(`Advertencia en bloque ${i + 1}: ${err.message}`);
+                }
+            }
         }
 
-        
-        await conexion.query(`CREATE DATABASE \`${dbNombre}\`;`);
-        console.log(`Base de Datos '${dbNombre}' en funcionamiento`);
-
-        //seleccionamos la base
-        await conexion.query(`USE \`${dbNombre}\`;`);
-
-        //Toda la estructura base de datos ------------------------------
-   
-        console.log("Por favor aguarde hasta que se cree la estructura");
-        const pathBase = path.join(__dirname, '../database/fotaza_db_ian.sql');
-        const fotaza_db_ian = fs.readFileSync(pathBase, 'utf8');
-        await conexion.query(fotaza_db_ian);
-
-        
-        console.log("estructura creada");
-        await ejecutarTriggers(conexion); //se colocan aparte porque no se puede ejecutar desde el .sql
-        await ejecutarSeeds(conexion); //coloca los datos de las estructuras para ejemplificar el TPI
-
-        //fin estructura base de datos ------------------------------
-
+        console.log(`\nBase de datos local '${DB_NAME}' finalizado con exito`);
+        await clientFinal.end();
 
     } catch (error) {
-        console.error("Error en inicializar la bd, detalles: ", error.message);
-    } finally {
-        if (conexion) {
-            await conexion.end();
-        }
-        process.exit();
+        console.error('Error:', error.message);
+        try { await clientInicial.end(); } catch (_) { }
     }
-    
 }
 
-inicializarBD();
+inicializarBaseDeDatos();

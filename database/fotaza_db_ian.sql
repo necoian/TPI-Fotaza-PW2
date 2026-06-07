@@ -1,619 +1,1323 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 06-06-2026 a las 21:13:56
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- PostgreSQL database dump
+--
+
+\restrict WrbSNfgBupGVDU33QuUgQyO32MGbJUoPtE3VkCRbktft5R4PYE0AXVUwOWIfrqQ
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 18.4
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: collections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.collections (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: collections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.collections_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.collections_id_seq OWNED BY public.collections.id;
+
+
+--
+-- Name: collections_post; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.collections_post (
+    collection_id integer NOT NULL,
+    post_id integer NOT NULL,
+    added_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: comment_report; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.comment_report (
+    id integer NOT NULL,
+    comment_id integer NOT NULL,
+    user_id integer NOT NULL,
+    reason_id integer NOT NULL,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: comment_report_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.comment_report_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: comment_report_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.comment_report_id_seq OWNED BY public.comment_report.id;
+
+
+--
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.comments (
+    uniqueid integer NOT NULL,
+    post_id integer NOT NULL,
+    user_id integer NOT NULL,
+    body text NOT NULL,
+    is_deleted boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: comments_uniqueid_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.comments_uniqueid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: comments_uniqueid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.comments_uniqueid_seq OWNED BY public.comments.uniqueid;
+
+
+--
+-- Name: followers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.followers (
+    follower_id integer NOT NULL,
+    following_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: image_report; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.image_report (
+    id integer NOT NULL,
+    image_id integer NOT NULL,
+    user_id integer NOT NULL,
+    reason_id integer NOT NULL,
+    description text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: image_report_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.image_report_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: image_report_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.image_report_id_seq OWNED BY public.image_report.id;
+
+
+--
+-- Name: images; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.images (
+    id integer NOT NULL,
+    post_id integer NOT NULL,
+    file_path text NOT NULL,
+    license character varying(50) NOT NULL,
+    watermark_text character varying(255) DEFAULT NULL::character varying,
+    order_index integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT images_license_check CHECK (((license)::text = ANY ((ARRAY['free'::character varying, 'copyright'::character varying])::text[])))
+);
+
+
+--
+-- Name: images_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.images_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.images_id_seq OWNED BY public.images.id;
+
+
+--
+-- Name: interested; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.interested (
+    user_id integer NOT NULL,
+    image_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: messages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.messages (
+    id integer NOT NULL,
+    sender_id integer NOT NULL,
+    receiver_id integer NOT NULL,
+    post_id integer,
+    body text NOT NULL,
+    is_read boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: messages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.messages_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
+
+
+--
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notifications (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    actor_id integer NOT NULL,
+    type character varying(50) NOT NULL,
+    entity_id integer,
+    is_read boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT notifications_type_check CHECK (((type)::text = ANY ((ARRAY['comment'::character varying, 'rating'::character varying, 'interested'::character varying, 'follow'::character varying])::text[])))
+);
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.notifications_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
+
+
+--
+-- Name: post; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    title character varying(255) NOT NULL,
+    description text,
+    status character varying(50) DEFAULT 'active'::character varying,
+    comments_open boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    update_at timestamp without time zone,
+    report_count integer DEFAULT 0,
+    is_blocked boolean DEFAULT false,
+    CONSTRAINT post_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'remove'::character varying, 'pending'::character varying])::text[])))
+);
+
+
+--
+-- Name: post_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.post_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: post_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.post_id_seq OWNED BY public.post.id;
+
+
+--
+-- Name: post_tags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.post_tags (
+    post_id integer NOT NULL,
+    tag_id integer NOT NULL
+);
+
+
+--
+-- Name: ratings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ratings (
+    id integer NOT NULL,
+    image_id integer NOT NULL,
+    user_id integer NOT NULL,
+    score smallint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT ratings_score_check CHECK (((score >= 1) AND (score <= 5)))
+);
+
+
+--
+-- Name: ratings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ratings_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ratings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ratings_id_seq OWNED BY public.ratings.id;
+
+
+--
+-- Name: report_reasons; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.report_reasons (
+    id integer NOT NULL,
+    label character varying(255) NOT NULL
+);
+
+
+--
+-- Name: report_reasons_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.report_reasons_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: report_reasons_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.report_reasons_id_seq OWNED BY public.report_reasons.id;
+
+
+--
+-- Name: roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.roles (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text
+);
+
+
+--
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
+
+
+--
+-- Name: tags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tags (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+--
+-- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.tags_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
+
+
+--
+-- Name: usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usuario (
+    id integer NOT NULL,
+    username character varying(255) NOT NULL,
+    email character varying(255) NOT NULL,
+    password_hash character varying(255) NOT NULL,
+    display_name character varying(255) DEFAULT NULL::character varying,
+    avatar_url character varying(255) DEFAULT NULL::character varying,
+    bio text,
+    role_id integer NOT NULL,
+    is_active boolean DEFAULT true,
+    strikes integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: usuario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.usuario_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: usuario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.usuario_id_seq OWNED BY public.usuario.id;
+
+
+--
+-- Name: validator_queue; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.validator_queue (
+    id integer NOT NULL,
+    post_id integer NOT NULL,
+    status character varying(50) DEFAULT 'pending'::character varying,
+    resolved_by integer,
+    resolution character varying(50) DEFAULT NULL::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT validator_queue_resolution_check CHECK (((resolution)::text = ANY ((ARRAY['removed'::character varying, 'dismissed'::character varying])::text[]))),
+    CONSTRAINT validator_queue_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'resolved'::character varying])::text[])))
+);
+
+
+--
+-- Name: validator_queue_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.validator_queue_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: validator_queue_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.validator_queue_id_seq OWNED BY public.validator_queue.id;
+
+
+--
+-- Name: collections id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections ALTER COLUMN id SET DEFAULT nextval('public.collections_id_seq'::regclass);
+
+
+--
+-- Name: comment_report id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comment_report ALTER COLUMN id SET DEFAULT nextval('public.comment_report_id_seq'::regclass);
+
+
+--
+-- Name: comments uniqueid; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments ALTER COLUMN uniqueid SET DEFAULT nextval('public.comments_uniqueid_seq'::regclass);
+
+
+--
+-- Name: image_report id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.image_report ALTER COLUMN id SET DEFAULT nextval('public.image_report_id_seq'::regclass);
+
+
+--
+-- Name: images id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.images_id_seq'::regclass);
+
+
+--
+-- Name: messages id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.messages_id_seq'::regclass);
+
+
+--
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+
+
+--
+-- Name: post id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.post ALTER COLUMN id SET DEFAULT nextval('public.post_id_seq'::regclass);
+
+
+--
+-- Name: ratings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ratings ALTER COLUMN id SET DEFAULT nextval('public.ratings_id_seq'::regclass);
+
+
+--
+-- Name: report_reasons id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.report_reasons ALTER COLUMN id SET DEFAULT nextval('public.report_reasons_id_seq'::regclass);
+
+
+--
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
+
+
+--
+-- Name: tags id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+
+
+--
+-- Name: usuario id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario ALTER COLUMN id SET DEFAULT nextval('public.usuario_id_seq'::regclass);
+
+
+--
+-- Name: validator_queue id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.validator_queue ALTER COLUMN id SET DEFAULT nextval('public.validator_queue_id_seq'::regclass);
+
+
+--
+-- Data for Name: collections; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: collections_post; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: comment_report; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: followers; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: image_report; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: images; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (1, 1, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780267682/Arbol_yntjfl.jpg', 'free', 'deIanPereyra', 0, '2026-06-01 03:51:30');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (2, 2, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268599/RosasEnLapiz_b3vlbs.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 03:55:02');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (3, 3, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780267680/pajarosEnRamas_azutrk.jpg', 'free', 'DeIanPereyra', 0, '2026-06-01 03:57:38');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (4, 4, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268604/CampoOleo_suthtb.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 03:59:32');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (5, 5, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268597/CampoColorido_jmwqvo.jpg', 'free', 'deIanPereyra', 0, '2026-06-01 04:01:05');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (6, 6, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268595/paisajePintado_wcawqq.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 04:03:56');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (8, 7, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780267677/FlorBlanca_szbjxu.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 04:07:41');
+
+
+--
+-- Data for Name: interested; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: post; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (1, 3, 'Arbol en el horizonte', 'Es un lindo árbol verde que está sobre una pequeña montaña, me gustan mucho los árboles', 'active', true, '2026-06-01 03:50:34', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (2, 2, 'Bellas Rosas', 'Un hermoso ramo de flores de Rosas en un fondo blanco, tiene un estilo únicod de dibujo', 'active', true, '2026-06-01 03:54:13', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (3, 3, 'Muchos pájaros', 'En un lugar húmedo se ve, o quizás el artista así quiso pintar la obra, unos lindos pájaros posaban sobre las ramas de yuyos del monte', 'active', true, '2026-06-01 03:56:52', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (4, 2, 'Un campo único', 'Un bello campo al óleo, con un detalle único, yo soy el de la pintura', 'active', true, '2026-06-01 03:58:57', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (5, 3, 'Una vida tranquila', 'Ya estoy cansado de la ciudad, quiero vivir en un lugar asiii', 'active', true, '2026-06-01 04:00:29', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (6, 2, 'El medio', 'Me gusta que todo esté fielmente en equilibrio, como en esta pintura', 'active', true, '2026-06-01 04:03:00', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (7, 2, 'La flor blanca', 'Ahora la flor es lo blanco, con suaves y sutiles tonos mas oscuros para producir una tenue sombra. Pero esta flor siempre brilla...', 'active', true, '2026-06-01 04:06:45', NULL, 0, false);
+
+
+--
+-- Data for Name: post_tags; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: ratings; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: report_reasons; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.roles (id, name, description) VALUES (1, 'Administrador', 'Tiene acceso al sistema por completo, se encarga de administrar la página en su totalidad');
+INSERT INTO public.roles (id, name, description) VALUES (2, 'Usuario', 'Tiene permisos de "usuario", puede crear, editar, eliminar y comentar publicaciones');
+
+
+--
+-- Data for Name: tags; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: usuario; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (1, 'elAdmin', 'ianecoloboox767@gmail.com', '$2b$10$xV77zH/LiJruWju2U8jOSuqAqJB19aymy2yU7uaLCuxS9gy3gX7ze', 'ADMINISTRADOR', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/admin_zpj5ay.png', 'Soy el administrador, me encargo de que esta página funcione de manera correcta', 1, true, 0, '2026-06-01 01:26:16');
+INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (2, 'RominaTolosa', 'tolousaromi@gmail.com', '$2b$10$INlfPkLFiPhMhda.JT.UVOAnJ2a9SWT91eb13L2nddPr9StSgcVWW', 'Romina Tolosa', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/Usuario1_dlvjvx.png', 'Amo a mi perrita y amo tomar mates', 2, true, 0, '2026-06-01 01:33:20');
+INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (3, 'IanPereyra', '0108.facultad@gmail.com', '$2b$10$hAnhwY/2GSW/wVydnavmsOv2dHsuJyh5l4F5sDgRFqKf5YWpTdEsi', 'Ian Pereyra', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/Usuario2_pyclch.png', 'me gusta mucho programar y jugar videojuegos', 2, true, 0, '2026-06-01 01:33:20');
+
+
+--
+-- Data for Name: validator_queue; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Name: collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.collections_id_seq', 1, false);
+
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+--
+-- Name: comment_report_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
 
+SELECT pg_catalog.setval('public.comment_report_id_seq', 1, false);
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `fotaza_db_ian`
+-- Name: comments_uniqueid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
--- --------------------------------------------------------
+SELECT pg_catalog.setval('public.comments_uniqueid_seq', 1, false);
 
+
 --
--- Estructura de tabla para la tabla `collections`
+-- Name: image_report_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `collections` (
-  `ID` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.image_report_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `collections_post`
+-- Name: images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `collections_post` (
-  `collection_id` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
-  `added_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.images_id_seq', 8, true);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `comments`
+-- Name: messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `comments` (
-  `UniqueID` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `body` text NOT NULL,
-  `is_deleted` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.messages_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `comment_report`
+-- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `comment_report` (
-  `ID` int(11) NOT NULL,
-  `comment_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `reason_id` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `followers`
+-- Name: post_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `followers` (
-  `follower_id` int(11) NOT NULL,
-  `following_id` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.post_id_seq', 7, true);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `images`
+-- Name: ratings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `images` (
-  `ID` int(11) NOT NULL,
-  `post_ID` int(11) NOT NULL,
-  `file_path` longtext NOT NULL,
-  `license` enum('free','copyright') NOT NULL,
-  `watermark_text` varchar(255) DEFAULT NULL,
-  `order_index` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.ratings_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `image_report`
+-- Name: report_reasons_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `image_report` (
-  `ID` int(11) NOT NULL,
-  `image_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `reason_id` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.report_reasons_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `interested`
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `interested` (
-  `USER_ID` int(11) NOT NULL,
-  `image_id` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.roles_id_seq', 2, true);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `messages`
+-- Name: tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `messages` (
-  `ID` int(11) NOT NULL,
-  `sender_id` int(11) NOT NULL,
-  `receiver_id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `body` text NOT NULL,
-  `is_read` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.tags_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `notifications`
+-- Name: usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `notifications` (
-  `ID` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `actor_id` int(11) NOT NULL,
-  `type` enum('comment','rating','interested','follow') NOT NULL,
-  `entity_id` int(11) DEFAULT NULL,
-  `is_read` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.usuario_id_seq', 3, true);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `post`
+-- Name: validator_queue_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-CREATE TABLE `post` (
-  `Id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `status` enum('active','remove','pending') DEFAULT 'active',
-  `comments_open` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `update_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  `report_count` int(11) DEFAULT 0,
-  `is_blocked` tinyint(1) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT pg_catalog.setval('public.validator_queue_id_seq', 1, false);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `post_tags`
+-- Name: collections collections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `post_tags` (
-  `POST_ID` int(11) NOT NULL,
-  `tag_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.collections
+    ADD CONSTRAINT collections_pkey PRIMARY KEY (id);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `ratings`
+-- Name: collections_post collections_post_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `ratings` (
-  `ID` int(11) NOT NULL,
-  `image_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `score` tinyint(4) NOT NULL CHECK (`score` between 1 and 5),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.collections_post
+    ADD CONSTRAINT collections_post_pkey PRIMARY KEY (collection_id, post_id);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `report_reasons`
+-- Name: comment_report comment_report_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `report_reasons` (
-  `ID` int(11) NOT NULL,
-  `label` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.comment_report
+    ADD CONSTRAINT comment_report_pkey PRIMARY KEY (id);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `roles`
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `roles` (
-  `ID` int(11) NOT NULL,
-  `Name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (uniqueid);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `tags`
+-- Name: followers followers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `tags` (
-  `ID` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_pkey PRIMARY KEY (follower_id, following_id);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `usuario`
+-- Name: image_report image_report_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE TABLE `usuario` (
-  `ID` int(11) NOT NULL,
-  `UserName` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `Password_hash` varchar(255) NOT NULL,
-  `display_name` varchar(255) DEFAULT NULL,
-  `avatar_url` varchar(255) DEFAULT NULL,
-  `bio` text DEFAULT NULL,
-  `role_id` int(11) NOT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `strikes` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE ONLY public.image_report
+    ADD CONSTRAINT image_report_pkey PRIMARY KEY (id);
 
--- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `validator_queue`
+-- Name: images images_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
+
+ALTER TABLE ONLY public.images
+    ADD CONSTRAINT images_pkey PRIMARY KEY (id);
 
-CREATE TABLE `validator_queue` (
-  `ID` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
-  `status` enum('pending','resolved') DEFAULT 'pending',
-  `resolved_by` int(11) DEFAULT NULL,
-  `resolution` enum('removed','dismissed') DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Índices para tablas volcadas
+-- Name: interested interested_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY public.interested
+    ADD CONSTRAINT interested_pkey PRIMARY KEY (user_id, image_id);
+
+
 --
--- Indices de la tabla `collections`
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `collections`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `user_id` (`user_id`);
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+
 
 --
--- Indices de la tabla `collections_post`
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `collections_post`
-  ADD PRIMARY KEY (`collection_id`,`post_id`),
-  ADD KEY `post_id` (`post_id`);
 
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `comments`
+-- Name: post post_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comments`
-  ADD PRIMARY KEY (`UniqueID`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `user_id` (`user_id`);
+
+ALTER TABLE ONLY public.post
+    ADD CONSTRAINT post_pkey PRIMARY KEY (id);
+
 
 --
--- Indices de la tabla `comment_report`
+-- Name: post_tags post_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comment_report`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `comment_id` (`comment_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `reason_id` (`reason_id`);
 
+ALTER TABLE ONLY public.post_tags
+    ADD CONSTRAINT post_tags_pkey PRIMARY KEY (post_id, tag_id);
+
+
 --
--- Indices de la tabla `followers`
+-- Name: ratings ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `followers`
-  ADD PRIMARY KEY (`follower_id`,`following_id`),
-  ADD KEY `following_id` (`following_id`);
+
+ALTER TABLE ONLY public.ratings
+    ADD CONSTRAINT ratings_pkey PRIMARY KEY (id);
+
 
 --
--- Indices de la tabla `images`
+-- Name: report_reasons report_reasons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `images`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `post_ID` (`post_ID`);
 
+ALTER TABLE ONLY public.report_reasons
+    ADD CONSTRAINT report_reasons_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `image_report`
+-- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `image_report`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `image_id` (`image_id`,`user_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `reason_id` (`reason_id`);
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_name_key UNIQUE (name);
+
 
 --
--- Indices de la tabla `interested`
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `interested`
-  ADD PRIMARY KEY (`USER_ID`,`image_id`),
-  ADD KEY `image_id` (`image_id`);
 
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `messages`
+-- Name: tags tags_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `messages`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `sender_id` (`sender_id`),
-  ADD KEY `receiver_id` (`receiver_id`),
-  ADD KEY `post_id` (`post_id`);
+
+ALTER TABLE ONLY public.tags
+    ADD CONSTRAINT tags_name_key UNIQUE (name);
+
 
 --
--- Indices de la tabla `notifications`
+-- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `actor_id` (`actor_id`);
 
+ALTER TABLE ONLY public.tags
+    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `post`
+-- Name: ratings unique_image_rating_user; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `post`
-  ADD PRIMARY KEY (`Id`),
-  ADD KEY `user_id` (`user_id`);
+
+ALTER TABLE ONLY public.ratings
+    ADD CONSTRAINT unique_image_rating_user UNIQUE (image_id, user_id);
+
 
 --
--- Indices de la tabla `post_tags`
+-- Name: image_report unique_image_user; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `post_tags`
-  ADD PRIMARY KEY (`POST_ID`,`tag_id`),
-  ADD KEY `tag_id` (`tag_id`);
 
+ALTER TABLE ONLY public.image_report
+    ADD CONSTRAINT unique_image_user UNIQUE (image_id, user_id);
+
+
 --
--- Indices de la tabla `ratings`
+-- Name: usuario usuario_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `ratings`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `image_id` (`image_id`,`user_id`),
-  ADD KEY `user_id` (`user_id`);
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_email_key UNIQUE (email);
+
 
 --
--- Indices de la tabla `report_reasons`
+-- Name: usuario usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `report_reasons`
-  ADD PRIMARY KEY (`ID`);
 
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `roles`
+-- Name: usuario usuario_username_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `Name` (`Name`);
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_username_key UNIQUE (username);
+
 
 --
--- Indices de la tabla `tags`
+-- Name: validator_queue validator_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `tags`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `name` (`name`);
 
+ALTER TABLE ONLY public.validator_queue
+    ADD CONSTRAINT validator_queue_pkey PRIMARY KEY (id);
+
+
 --
--- Indices de la tabla `usuario`
+-- Name: validator_queue validator_queue_post_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `UserName` (`UserName`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `role_id` (`role_id`);
+
+ALTER TABLE ONLY public.validator_queue
+    ADD CONSTRAINT validator_queue_post_id_key UNIQUE (post_id);
+
 
 --
--- Indices de la tabla `validator_queue`
+-- Name: image_report trg_after_image_report_insert; Type: TRIGGER; Schema: public; Owner: -
 --
-ALTER TABLE `validator_queue`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `post_id` (`post_id`),
-  ADD KEY `resolved_by` (`resolved_by`);
 
+CREATE TRIGGER trg_after_image_report_insert AFTER INSERT ON public.image_report FOR EACH ROW EXECUTE FUNCTION public.fn_after_image_report_insert();
+
+
 --
--- AUTO_INCREMENT de las tablas volcadas
+-- Name: post trg_after_post_status_update; Type: TRIGGER; Schema: public; Owner: -
 --
+
+CREATE TRIGGER trg_after_post_status_update AFTER UPDATE ON public.post FOR EACH ROW EXECUTE FUNCTION public.fn_after_post_status_update();
 
+
 --
--- AUTO_INCREMENT de la tabla `collections`
+-- Name: collections_post collections_post_collection_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `collections`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.collections_post
+    ADD CONSTRAINT collections_post_collection_id_fkey FOREIGN KEY (collection_id) REFERENCES public.collections(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `comments`
+-- Name: collections_post collections_post_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comments`
-  MODIFY `UniqueID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.collections_post
+    ADD CONSTRAINT collections_post_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `comment_report`
+-- Name: collections collections_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comment_report`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.collections
+    ADD CONSTRAINT collections_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `images`
+-- Name: comment_report comment_report_comment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `images`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.comment_report
+    ADD CONSTRAINT comment_report_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.comments(uniqueid) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `image_report`
+-- Name: comment_report comment_report_reason_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `image_report`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.comment_report
+    ADD CONSTRAINT comment_report_reason_id_fkey FOREIGN KEY (reason_id) REFERENCES public.report_reasons(id);
 
+
 --
--- AUTO_INCREMENT de la tabla `messages`
+-- Name: comment_report comment_report_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `messages`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.comment_report
+    ADD CONSTRAINT comment_report_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `notifications`
+-- Name: comments comments_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `notifications`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `post`
+-- Name: comments comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `post`
-  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `ratings`
+-- Name: followers followers_follower_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `ratings`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_follower_id_fkey FOREIGN KEY (follower_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `report_reasons`
+-- Name: followers followers_following_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `report_reasons`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_following_id_fkey FOREIGN KEY (following_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `roles`
+-- Name: image_report image_report_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `roles`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.image_report
+    ADD CONSTRAINT image_report_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `tags`
+-- Name: image_report image_report_reason_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `tags`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.image_report
+    ADD CONSTRAINT image_report_reason_id_fkey FOREIGN KEY (reason_id) REFERENCES public.report_reasons(id);
 
+
 --
--- AUTO_INCREMENT de la tabla `usuario`
+-- Name: image_report image_report_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `usuario`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.image_report
+    ADD CONSTRAINT image_report_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- AUTO_INCREMENT de la tabla `validator_queue`
+-- Name: images images_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `validator_queue`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE ONLY public.images
+    ADD CONSTRAINT images_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE CASCADE;
 
+
 --
--- Restricciones para tablas volcadas
+-- Name: interested interested_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
+
+ALTER TABLE ONLY public.interested
+    ADD CONSTRAINT interested_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `collections`
+-- Name: interested interested_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `collections`
-  ADD CONSTRAINT `collections_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.interested
+    ADD CONSTRAINT interested_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `collections_post`
+-- Name: messages messages_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `collections_post`
-  ADD CONSTRAINT `collections_post_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `collections` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `collections_post_ibfk_2` FOREIGN KEY (`post_id`) REFERENCES `post` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE SET NULL;
 
+
 --
--- Filtros para la tabla `comments`
+-- Name: messages messages_receiver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comments`
-  ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `post` (`Id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `comment_report`
+-- Name: messages messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `comment_report`
-  ADD CONSTRAINT `comment_report_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`UniqueID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `comment_report_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `comment_report_ibfk_3` FOREIGN KEY (`reason_id`) REFERENCES `report_reasons` (`ID`);
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `followers`
+-- Name: notifications notifications_actor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `followers`
-  ADD CONSTRAINT `followers_ibfk_1` FOREIGN KEY (`follower_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `followers_ibfk_2` FOREIGN KEY (`following_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `images`
+-- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `images`
-  ADD CONSTRAINT `images_ibfk_1` FOREIGN KEY (`post_ID`) REFERENCES `post` (`Id`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `image_report`
+-- Name: post_tags post_tags_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `image_report`
-  ADD CONSTRAINT `image_report_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `images` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `image_report_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `image_report_ibfk_3` FOREIGN KEY (`reason_id`) REFERENCES `report_reasons` (`ID`);
+
+ALTER TABLE ONLY public.post_tags
+    ADD CONSTRAINT post_tags_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `interested`
+-- Name: post_tags post_tags_tag_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `interested`
-  ADD CONSTRAINT `interested_ibfk_1` FOREIGN KEY (`USER_ID`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `interested_ibfk_2` FOREIGN KEY (`image_id`) REFERENCES `images` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.post_tags
+    ADD CONSTRAINT post_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `messages`
+-- Name: post post_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `messages`
-  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`post_id`) REFERENCES `post` (`Id`) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.post
+    ADD CONSTRAINT post_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `notifications`
+-- Name: ratings ratings_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`actor_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.ratings
+    ADD CONSTRAINT ratings_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `post`
+-- Name: ratings ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `post`
-  ADD CONSTRAINT `post_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.ratings
+    ADD CONSTRAINT ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `post_tags`
+-- Name: usuario usuario_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `post_tags`
-  ADD CONSTRAINT `post_tags_ibfk_1` FOREIGN KEY (`POST_ID`) REFERENCES `post` (`Id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `post_tags_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id);
 
+
 --
--- Filtros para la tabla `ratings`
+-- Name: validator_queue validator_queue_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `ratings`
-  ADD CONSTRAINT `ratings_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `images` (`ID`) ON DELETE CASCADE,
-  ADD CONSTRAINT `ratings_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `usuario` (`ID`) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.validator_queue
+    ADD CONSTRAINT validator_queue_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.post(id) ON DELETE CASCADE;
 
+
 --
--- Filtros para la tabla `usuario`
+-- Name: validator_queue validator_queue_resolved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
-ALTER TABLE `usuario`
-  ADD CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`ID`);
+
+ALTER TABLE ONLY public.validator_queue
+    ADD CONSTRAINT validator_queue_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES public.usuario(id) ON DELETE SET NULL;
 
+
 --
--- Filtros para la tabla `validator_queue`
+-- PostgreSQL database dump complete
 --
-ALTER TABLE `validator_queue`
-  ADD CONSTRAINT `validator_queue_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `post` (`Id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `validator_queue_ibfk_2` FOREIGN KEY (`resolved_by`) REFERENCES `usuario` (`ID`) ON DELETE SET NULL;
-COMMIT;
+
+\unrestrict WrbSNfgBupGVDU33QuUgQyO32MGbJUoPtE3VkCRbktft5R4PYE0AXVUwOWIfrqQ
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
