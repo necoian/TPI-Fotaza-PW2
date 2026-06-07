@@ -1,47 +1,27 @@
-if error
-  div
-    p Error: #{error}
+extends layout
 
-- const datos = datosCompletados || {}
-
-form(action="/publicar" method="post" enctype="multipart/form-data")
-      
-      
-      div
-        label(for="title") Título de la publicación:
-        br
-        input(type="text" name="title" id="title" value=datos.title required)
-      
-      br
-      
-      div
-        label(for="description") Descripción de la fotografía:
-        br
-        
-        textarea(name="description" id="description" rows="4" cols="40" required) #{datos.description || ''}
-      
-      br
+block content
+    h1 Crear nueva publicación
     
-      div
-        label(for="imageFile") Seleccionar Imagen desde tu dispositivo:
+    if error
+        p(style="color: red;") #{error}
+        
+    form(action='/publicar' method='post' enctype='multipart/form-data')
+        label(for='title') Título:
+        input(type='text' name='title' id='title' value=(datosCompletados ? datosCompletados.title : '') required)
         br
-        input(type="file" name="imageFile" id="imageFile" accept="image/*" required)
-      
-      br
-      
-      div
-        label(for="license") Tipo de Licencia:
+        label(for='description') Descripción:
+        textarea(name='description' id='description') #{datosCompletados ? datosCompletados.description : ''}
         br
-        select(name="license" id="license" required)
-          option(value="free" selected=datos.license === 'free') Libre (Free)
-          option(value="copyright" selected=datos.license === 'copyright') Con Copyright (Derechos Reservados)
-
-      br
-      
-      div
-        label(for="watermarkText") Texto para la Marca de Agua (Obligatorio):
+        label(for='license') Licencia:
+        select(name='license' id='license')
+            option(value='free') Libre (Sin Copyright / Pública)
+            option(value='copyright') Con Copyright
         br
-        input(type="text" name="watermarkText" id="watermarkText" value=datos.watermarkText required placeholder="Ej: Propiedad de Ian")
-
-      br
-      input(type="submit" value="Publicar")
+        label(for='watermarkText') Texto marca de agua:
+        input(type='text' name='watermarkText' id='watermarkText' value=(datosCompletados ? datosCompletados.watermarkText : ''))
+        br
+        label(for='imageFile') Seleccionar Imagen:
+        input(type='file' name='imageFile' id='imageFile' accept='image/*' required)
+        br
+        input(type='submit' value='Subir Publicación')

@@ -1,0 +1,33 @@
+doctype html
+html(lang="es")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title Fotaza 2
+        
+        // link(rel="stylesheet", href="/css/estilos.css")
+    body
+        
+        header
+            nav
+                a(href="/") 
+                span  | 
+                if usuarioLogueado
+                    span Bienvenido, #{usuarioLogueado.UserName} ! 
+                    a(href="/publicar") Enviar Publicación
+                    span  | 
+                    a(href="/login/logout") Cerrar Sesión
+                else
+                    a(href="/login") Iniciar Sesión
+
+        hr
+
+        
+        main
+            block content
+
+        hr
+
+        
+        footer
+            p © 2026 Fotaza - Proyecto Programación Web II. Todos los derechos reservados.

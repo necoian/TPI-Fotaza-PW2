@@ -1,9 +1,42 @@
-doctype html
-html
-  head
-    title Fotaza
-  body
-    h1 Galería de Fotos
-    ul
-      each foto in fotos
-        img(src=foto.file_path, alt="Descripción de la imagen")
+extends layout
+
+block content
+    h1 Explorar Publicaciones
+
+    // Formulario del Buscador
+    form(action="/" method="GET" style="margin-bottom: 20px;")
+        input(
+            type="text" 
+            name="search" 
+            placeholder="Buscar por título o descripción..." 
+            value=busqueda 
+            style="padding: 8px; width: 300px; margin-right: 10px;"
+        )
+        input(type="submit" value="Buscar" style="padding: 8px 15px;")
+        if busqueda
+            a(href="/" style="margin-left: 10px; color: gray; text-decoration: none;") Limpiar filtros
+
+    // Galería de Imágenes
+    if fotos && fotos.length > 0
+        div.galeria(style="display: flex; flex-wrap: wrap; gap: 20px;")
+            each foto in fotos
+                div.tarjeta-foto(style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; max-width: 320px;")
+                    h3(style="margin-top: 0;") #{foto.title}
+                    img(
+                        src=foto.file_path 
+                        alt=foto.title 
+                        style="max-width: 300px; max-height: 300px; display: block; margin-bottom: 10px; border-radius: 4px;"
+                    )
+                    if foto.description
+                        p(style="font-style: italic; color: #555;") #{foto.description}
+                    p 
+                        strong Licencia: 
+                        span(style=foto.license === 'free' ? "color: green;" : "color: red;") #{foto.license}
+                    if foto.watermark_text
+                        p
+                            small(style="color: #777;") Marca de agua: #{foto.watermark_text}
+    else
+        if busqueda
+            p No se encontraron resultados para "#{busqueda}".
+        else
+            p No hay publicaciones disponibles en este momento.
