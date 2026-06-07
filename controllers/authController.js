@@ -12,7 +12,7 @@ exports.procesarLogin = async (req, res) => {
 
     try {
 
-        const query = 'SELECT * FROM usuario WHERE "UserName" = $1 OR email = $2';
+        const query = 'SELECT * FROM usuario WHERE username = $1 OR email = $2';
 
         const resultado = await db.query(query, [username, username]); 
         
@@ -24,16 +24,20 @@ exports.procesarLogin = async (req, res) => {
 
         const usuarioEncontrado = usuarios[0];
 
-        const coincidePassword = await bcrypt.compare(password, usuarioEncontrado.Password_hash);
+        const passwordCampo = usuarioEncontrado.password_hash || usuarioEncontrado.Password_hash;
+        const coincidePassword = await bcrypt.compare(password, passwordCampo);
 
         if (!coincidePassword) {
             return res.render('login', { error: 'Contraseña errónea.' });
         }
 
+        const usernameCampo = usuarioEncontrado.username || usuarioEncontrado.UserName;
+        const roleIdCampo = usuarioEncontrado.role_id || usuarioEncontrado.Role_id;
+
         req.session.usuario = {
             id: usuarioEncontrado.id, 
-            UserName: usuarioEncontrado.UserName,
-            role: usuarioEncontrado.role_id === 1 ? 'Administrador' : 'Usuario'
+            UserName: usernameCampo,
+            role: roleIdCampo === 1 ? 'Administrador' : 'Usuario'
         };
 
         res.redirect('/');

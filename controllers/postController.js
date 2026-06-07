@@ -96,31 +96,31 @@ exports.guardarPublicacion = async (req, res) => {
         const queryPost = `
             INSERT INTO post (user_id, title, description, status, comments_open, created_at) 
             VALUES ($1, $2, $3, 'active', true, NOW())
-            RETURNING "Id"
+            RETURNING id
         `;
         //se ejecuta la orden
-        const [resultadoPost] = await clienteT.execute(queryPost, [
+        const resultadoPost = await clienteT.query(queryPost, [
             userId,
             title,
             description
         ]);
 
-        const nuevoPostId = resultadoPost.rows[0].Id;
+        const nuevoPostId = resultadoPost.rows[0].id;
 
         //para la imagen
         const queryImage = `
-            INSERT INTO images ("post_ID", file_path, license, watermark_text, order_index, created_at) 
+            INSERT INTO images (post_id, file_path, license, watermark_text, order_index, created_at) 
             VALUES ($1, $2, $3, $4, 0, NOW())
         `;
 
-        await conexion.execute(queryImage, [
+        await clienteT.query(queryImage, [
             nuevoPostId,
             contenidoImagen,
             license,
             watermarkText
         ]);
 
-        await clienteTransaccion.query('COMMIT');
+        await clienteT.query('COMMIT');
         console.log("Post guardado de forma completa en la Base de Datos");
 
         res.redirect('/');
@@ -130,7 +130,7 @@ exports.guardarPublicacion = async (req, res) => {
 
         console.error("Error en el controlador:", error.message);
 
-        if (conexion) await conexion.rollback(); //regresa cambios de conexion
+        if (clienteT) await clienteT.query('ROLLBACK'); //regresa cambios de conexion
 
         let mensaje = "Ocurrió un error al procesar la publicación.";
         if (error.message.includes("Bind parameters must not contain undefined")) {
