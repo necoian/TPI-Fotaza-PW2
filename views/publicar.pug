@@ -1,29 +1,35 @@
 extends layout
 
 block content
-    h1 Crear nueva publicación
-    
-    if error
-        p(style="color: red;") #{error}
-        
-    form(action='/publicar' method='post' enctype='multipart/form-data')
-        label(for='title') Título:
-        input(type='text' name='title' id='title' value=(datosCompletados ? datosCompletados.title : '') required)
-        br
-        label(for='description') Descripción:
-        
-        textarea(name='description' id='description' required) #{datosCompletados ? datosCompletados.description : ''} 
-        br
-        label(for='license') Licencia:
-        select(name='license' id='license' required)
-            option(value='free') Libre (Sin Copyright / Pública)
-            option(value='copyright') Con Copyright
-        br
-        label(for='watermarkText') Texto marca de agua:
-        
-        input(type='text' name='watermarkText' id='watermarkText' value=(datosCompletados ? datosCompletados.watermarkText : '') required)
-        br
-        label(for='imageFile') Seleccionar Imagen:
-        input(type='file' name='imageFile' id='imageFile' accept='image/*' required)
-        br
-        input(type='submit' value='Subir Publicación')
+    .ink-form-container
+        .ink-box.ink-form-card
+            h1 Crear nueva publicación
+            
+            if error
+                p.ink-error #{error}
+                
+            form.ink-form(action='/publicar' method='post' enctype='multipart/form-data')
+                .form-group
+                    label(for='title') Título:
+                    input.ink-input(type='text' name='title' id='title' value=(datosCompletados ? datosCompletados.title : '') required)
+                
+                .form-group
+                    label(for='description') Descripción:
+                    textarea.ink-input(name='description' id='description' rows="4" required) #{datosCompletados ? datosCompletados.description : ''} 
+                
+                .form-group
+                    label(for='license') Licencia:
+                    select.ink-input(name='license' id='license' required)
+                        option(value='free') Libre (Sin Copyright / Pública)
+                        option(value='copyright') Con Copyright
+                
+                .form-group
+                    label(for='watermarkText') Texto marca de agua:
+                    input.ink-input(type='text' name='watermarkText' id='watermarkText' value=(datosCompletados ? datosCompletados.watermarkText : '') required)
+                
+                .form-group
+                    label(for='imageFile') Seleccionar Imagen:
+                    input.ink-input(type='file' name='imageFile' id='imageFile' accept='image/*' required)
+                
+                div(style="text-align: right; margin-top: 10px;")
+                    input.ink-btn(type='submit' value='Subir Publicación')

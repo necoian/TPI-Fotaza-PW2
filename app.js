@@ -30,6 +30,9 @@ const postRoutes = require('./routes/post');
 // PUG 
 app.set('view engine', 'pug');
 
+//para archivos estaticos como css
+app.use(express.static('public'));
+
 // Middleware que posibilita la lectura de formularios
 app.use(express.urlencoded({ extended: true }));
 

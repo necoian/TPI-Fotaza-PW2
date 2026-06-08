@@ -27,7 +27,7 @@ html(lang="es")
             .card-body
               
               if comentarios.length === 0
-                p.text-muted.text-center.my-3 No hay comentarios aún. ¡Sé el primero en comentar!
+                p.text-muted.text-center.my-3 Sin comentarios
               else
                 .list-group.list-group-flush.mb-4
                   each com in comentarios
@@ -44,7 +44,7 @@ html(lang="es")
                   h3.h6.mb-3 Deja tu comentario como @#{usuarioLogueado.UserName}
                   form(action=`/post/${post.id}/comentar`, method="POST")
                     .mb-3
-                      textarea.form-control(name="text", rows="3", placeholder="Escribe un comentario respetuoso...", required=true)
+                      textarea.form-control(name="text", rows="3", placeholder="Escribe un comentario", required=true)
                     .text-end
                       button.btn.btn-primary(type="submit") Publicar Comentario
                 else

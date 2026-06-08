@@ -5,15 +5,17 @@ html(lang="es")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
         title Fotaza 2
         
-        // link(rel="stylesheet", href="/css/estilos.css")
-    body
         
+        link(rel="stylesheet", href="/css/style.css")
+        
+    body
         header
             nav
-                a(href="/") 
+                a(href="/") Fotaza 2
                 span  | 
                 if usuarioLogueado
-                    span Bienvenido, #{usuarioLogueado.UserName} ! 
+                    span Bienvenido, @#{usuarioLogueado.UserName} ! 
+                    span  | 
                     a(href="/post/crear") Enviar Publicación
                     span  | 
                     a(href="/login/logout") Cerrar Sesión
@@ -22,12 +24,10 @@ html(lang="es")
 
         hr
 
-        
         main
             block content
 
         hr
 
-        
         footer
-            p © 2026 Fotaza - Proyecto Programación Web II. Todos los derechos reservados.
+            p © 2026 Fotaza 2 - Proyecto Programación Web II.

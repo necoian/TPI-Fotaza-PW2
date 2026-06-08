@@ -1,16 +1,21 @@
 extends layout
 
 block content
-    h1 Iniciar Sesión
-    
-    if error
-        p(style="color: red;") #{error}
-        
-    form(action='/login' method='post')
-        label(for='username') Usuario o email: 
-        input(type='text' name='username' id='username' required)
-        br
-        label(for='password') Contraseña: 
-        input(type='password' name='password' id='password' required)
-        br
-        input(type='submit' value='Ingresar')
+    .ink-form-container
+        .ink-box.ink-form-card
+            h1 Iniciar Sesión
+            
+            if error
+                p.ink-error #{error}
+                
+            form.ink-form(action='/login' method='post')
+                .form-group
+                    label(for='username') Usuario o email: 
+                    input.ink-input(type='text' name='username' id='username' required)
+                
+                .form-group
+                    label(for='password') Contraseña: 
+                    input.ink-input(type='password' name='password' id='password' required)
+                
+                div(style="text-align: right; margin-top: 10px;")
+                    input.ink-btn(type='submit' value='Ingresar')

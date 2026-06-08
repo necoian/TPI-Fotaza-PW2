@@ -3,41 +3,41 @@ extends layout
 block content
     h1 Explorar Publicaciones
 
-    // Formulario del Buscador
-    form(action="/" method="GET" style="margin-bottom: 20px;")
-        input(
+    
+    form.search-form(action="/" method="GET")
+        input.ink-input(
             type="text" 
             name="search" 
             placeholder="Buscar por título o descripción..." 
-            value=busqueda 
-            style="padding: 8px; width: 300px; margin-right: 10px;"
+            value=busqueda
         )
-        input(type="submit" value="Buscar" style="padding: 8px 15px;")
+        input.ink-btn(type="submit" value="Buscar")
         if busqueda
-            a(href="/" style="margin-left: 10px; color: gray; text-decoration: none;") Limpiar filtros
+            a.ink-link-clear(href="/") Limpiar filtros
 
     // Galería de Imágenes
     if fotos && fotos.length > 0
-        div.galeria(style="display: flex; flex-wrap: wrap; gap: 20px;")
+        div.galeria
             each foto in fotos
-                div.tarjeta-foto(style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; max-width: 320px;")
-                    h3(style="margin-top: 0;") #{foto.title}
-                    img(
-                        src=foto.file_path 
-                        alt=foto.title 
-                        style="max-width: 300px; max-height: 300px; display: block; margin-bottom: 10px; border-radius: 4px;"
-                    )
+                div.ink-box.tarjeta-foto
+                    h3 #{foto.title}
+                    img.ink-img(src=foto.file_path, alt=foto.title)
+                    
                     if foto.description
-                        p(style="font-style: italic; color: #555;") #{foto.description}
-                    p 
+                        p.foto-descripcion #{foto.description}
+                        
+                    p.foto-licencia
                         strong Licencia: 
-                        span(style=foto.license === 'free' ? "color: green;" : "color: red;") #{foto.license}
+                        span(class=foto.license === 'free' ? 'licencia-free' : 'licencia-premium') #{foto.license}
+                        
                     if foto.watermark_text
-                        p
-                            small(style="color: #777;") Marca de agua: #{foto.watermark_text}
-                    a.btn.btn-outline-primary.btn-sm(href=`/post/${foto.id}`) Ver detalles y comentarios
+                        p.foto-firma
+                            small Firma: #{foto.watermark_text}
+                            
+                    div.tarjeta-footer
+                        a.ink-btn(href=`/post/${foto.id}`) Ver detalles y comentarios
     else
         if busqueda
-            p No se encontraron resultados para "#{busqueda}".
+            p.no-results No se encontraron trazos ni resultados para "#{busqueda}".
         else
-            p No hay publicaciones disponibles en este momento.
+            p.no-results No hay apuntes ni publicaciones disponibles en este momento.
