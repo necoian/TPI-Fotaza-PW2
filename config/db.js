@@ -3,25 +3,24 @@ require('dotenv').config();
 
 let pool;
 
-// Si existe DATABASE_URL, nos conectamos a Supabase 
+// Validamos si existe la URL completa en el archivo .env
 if (process.env.DATABASE_URL) {
+    console.log("Conectando a la Base de Datos mediante DATABASE_URL...");
     pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false } 
+        connectionString: process.env.DATABASE_URL.trim(),
+        ssl: {
+            rejectUnauthorized: false 
+        }
     });
-    console.log("Conectado de manera online");
 } else {
-    // Si no existe, nos conectamos al Postgres local
+    console.log("Conectando a la Base de Datos mediante localhost");
     pool = new Pool({
-        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME || 'fotaza_db_ian'
+        database: process.env.DB_NAME,
+        port: process.env.DB_PORT
     });
-
-    console.log("Conectado al PostgreSQL de manera Local");
 }
-
 
 module.exports = pool;

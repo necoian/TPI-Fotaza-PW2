@@ -11,15 +11,17 @@ block content
         input(type='text' name='title' id='title' value=(datosCompletados ? datosCompletados.title : '') required)
         br
         label(for='description') Descripción:
-        textarea(name='description' id='description') #{datosCompletados ? datosCompletados.description : ''}
+        
+        textarea(name='description' id='description' required) #{datosCompletados ? datosCompletados.description : ''} 
         br
         label(for='license') Licencia:
-        select(name='license' id='license')
+        select(name='license' id='license' required)
             option(value='free') Libre (Sin Copyright / Pública)
             option(value='copyright') Con Copyright
         br
         label(for='watermarkText') Texto marca de agua:
-        input(type='text' name='watermarkText' id='watermarkText' value=(datosCompletados ? datosCompletados.watermarkText : ''))
+        
+        input(type='text' name='watermarkText' id='watermarkText' value=(datosCompletados ? datosCompletados.watermarkText : '') required)
         br
         label(for='imageFile') Seleccionar Imagen:
         input(type='file' name='imageFile' id='imageFile' accept='image/*' required)

@@ -13,7 +13,7 @@ const app = express();
 //Midleware de sesión
 app.use(session({
 
-    secret: process.env.SESSION_SECRET || 'clave_secreta_fotaza',
+    secret: process.env.SESSION_SECRET || 'clave_secreta',
     resave: false,
     saveUninitialized:  false,
     cookie: {
