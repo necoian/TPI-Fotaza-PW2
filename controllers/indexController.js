@@ -1,40 +1,51 @@
-const db = require('../config/db'); 
+const { Image, Post } = require('../models/Index');
+const { Op } = require('sequelize');
 
-exports.index = async (req , res) => {
+exports.index = async (req, res) => {
     try {
         const queryTerm = req.query.search ? req.query.search.trim() : '';
         const usuarioLogueado = req.session && req.session.usuario ? req.session.usuario : null;
 
         
-        let sql = `
-            SELECT i.*, p.title, p.description 
-            FROM public.images i
-            INNER JOIN public.post p ON i.post_id = p.id
-            WHERE 1=1
-        `;
-        const params = [];
-
-        // RESTRICCIÓN DE PRIVACIDAD (los no autenticados solo veran el free)
+        let whereImage = {};
         if (!usuarioLogueado) {
-            sql += ` AND i.license = 'free'`;
+            whereImage.license = 'free'; // RESTRICCIÓN DE PRIVACIDAD
         }
-
-        // FILTRO DE BÚSQUEDA
-        if (queryTerm !== '') {
-            params.push(`%${queryTerm}%`);
-            // se busca coincidencias parciales
-            sql += ` AND (p.title ILIKE $${params.length} OR p.description ILIKE $${params.length})`;
-        }
-
-        // Ordenamos para que aparezcan las más recientes primero
-        sql += ` ORDER BY i.created_at DESC`;
-
-        const resultado = await db.query(sql, params);
-        const registros = resultado.rows;
 
         
+        let wherePost = {};
+        if (queryTerm !== '') {
+            wherePost[Op.or] = [
+                { title: { [Op.iLike]: `%${queryTerm}%` } },
+                { description: { [Op.iLike]: `%${queryTerm}%` } }
+            ];
+        }
+
+        // Consulta unificada mediante ORM
+        const registros = await Image.findAll({
+            where: whereImage,
+            include: [{
+                model: Post,
+                where: wherePost,
+                required: true // Esto fuerza un INNER JOIN estricto
+            }],
+            order: [['created_at', 'DESC']]
+        });
+
+        // Adaptamos la respuesta para mantener la compatibilidad con tu vista .pug actual sin cambiar nada
+        const fotosAdaptadas = registros.map(reg => {
+            return {
+                id: reg.id,
+                file_path: reg.file_path,
+                license: reg.license,
+                watermark_text: reg.watermark_text,
+                title: reg.Post.title,          
+                description: reg.Post.description 
+            };
+        });
+
         res.render('index', { 
-            fotos: registros, 
+            fotos: fotosAdaptadas, 
             busqueda: queryTerm 
         });
         

@@ -1,57 +1,51 @@
-const db = require('../config/db');
+const { Usuario } = require('../models/Index'); 
 const bcrypt = require('bcrypt');
-
 
 exports.mostrarLogin = (req, res) => {
     res.render('login');
-}
+};
 
 exports.procesarLogin = async (req, res) => {
-
-    const {username, password} = req.body;
+    const { username, password } = req.body;
 
     try {
-
-        const query = 'SELECT * FROM usuario WHERE username = $1 OR email = $2';
-
-        const resultado = await db.query(query, [username, username]); 
         
-        const usuarios = resultado.rows;
+        const { Op } = require('sequelize');
+        const usuarioEncontrado = await Usuario.findOne({
+            where: {
+                [Op.or]: [
+                    { username: username },
+                    { email: username }
+                ]
+            }
+        });
 
-        if (usuarios.length === 0) {
+        if (!usuarioEncontrado) {
             return res.render('login', { error: 'Credenciales inválidas' });
         }
 
-        const usuarioEncontrado = usuarios[0];
-
-        const passwordCampo = usuarioEncontrado.password_hash || usuarioEncontrado.Password_hash;
-        const coincidePassword = await bcrypt.compare(password, passwordCampo);
+        const coincidePassword = await bcrypt.compare(password, usuarioEncontrado.password_hash);
 
         if (!coincidePassword) {
             return res.render('login', { error: 'Contraseña errónea.' });
         }
 
-        const usernameCampo = usuarioEncontrado.username || usuarioEncontrado.UserName;
-        const roleIdCampo = usuarioEncontrado.role_id || usuarioEncontrado.Role_id;
-
         req.session.usuario = {
             id: usuarioEncontrado.id, 
-            UserName: usernameCampo,
-            role: roleIdCampo === 1 ? 'Administrador' : 'Usuario'
+            UserName: usuarioEncontrado.username,
+            role: usuarioEncontrado.role_id === 1 ? 'Administrador' : 'Usuario'
         };
 
         res.redirect('/');
 
     } catch (error) {
-        console.error("Error crítico en el proceso de login:", error);
+        console.error("Error en el proceso de login:", error);
         res.status(500).send('Error desde el servidor');
     }
 };
 
 exports.cerrarSesion = (req, res) => {
-
     req.session.destroy((err) => {
-        
         if (err) {
             return res.send('Error al cerrar sesión');
         }
