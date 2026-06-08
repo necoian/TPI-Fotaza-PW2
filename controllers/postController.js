@@ -1,6 +1,88 @@
 const sequelize = require('../config/db'); 
-const { Post, Image } = require('../models/Index');
+const { Post, Image, Comment, Usuario } = require('../models/Index');
 const cloudinary = require('../config/cloudinary');
+
+
+exports.verDetalle = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const usuarioLogueado = req.session && req.session.usuario ? req.session.usuario : null;
+
+        
+        const post = await Post.findByPk(postId, {
+            include: [
+                { 
+                    model: Image, 
+                    required: false 
+                },
+                { 
+                    model: Comment,
+                    required: false,
+                    include: [{ model: Usuario, attributes: ['username'] }]
+                }
+            ]
+        });
+
+        if (!post) {
+            return res.status(404).send(`Publicación con ID ${postId} no encontrada.`);
+        }
+
+        const imagen = post.Images && post.Images.length > 0 ? post.Images[0] : null;
+
+        if (imagen && imagen.license !== 'free' && !usuarioLogueado) {
+            return res.render('login', { error: "Debes iniciar sesión para ver esta publicación protegida." });
+        }
+
+        
+        const listaComentarios = post.Comments || [];
+        listaComentarios.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+        res.render('detalle', {
+            post: post,
+            imagen: imagen || { file_path: '', license: 'free', watermark_text: '' },
+            comentarios: listaComentarios
+        });
+
+    } catch (error) {
+        console.error("Error al cargar el detalle del post:", error);
+        res.status(500).send("Error interno del servidor: " + error.message);
+    }
+};
+
+
+exports.agregarComentario = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { text } = req.body;
+        const userId = req.session.usuario.id; 
+
+        if (!text || text.trim() === '') {
+            
+            return res.redirect(`/post/${postId}`);
+        }
+
+        
+        const post = await Post.findByPk(postId);
+        if (!post || !post.comments_open) {
+            return res.status(400).send("Los comentarios están cerrados para esta publicación.");
+        }
+
+        
+        await Comment.create({
+            post_id: postId,
+            user_id: userId,
+            text: text.trim(),
+            created_at: new Date()
+        });
+
+       
+        res.redirect(`/post/${postId}`);
+
+    } catch (error) {
+        console.error("Error al guardar el comentario:", error);
+        res.status(500).send("No se pudo publicar el comentario.");
+    }
+};
 
 exports.mostrarFormulario = (req, res) => {
     res.render('publicar');

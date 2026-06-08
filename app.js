@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 // Uso de las rutas
 app.use('/', indexRoutes);
 app.use('/login', authRoutes);
-app.use('/publicar', postRoutes);
+app.use('/post', postRoutes);
 // rutas de comentarios
 // app.use('/', commentRoutes); 
 

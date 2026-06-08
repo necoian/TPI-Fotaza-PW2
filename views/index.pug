@@ -35,6 +35,7 @@ block content
                     if foto.watermark_text
                         p
                             small(style="color: #777;") Marca de agua: #{foto.watermark_text}
+                    a.btn.btn-outline-primary.btn-sm(href=`/post/${foto.id}`) Ver detalles y comentarios
     else
         if busqueda
             p No se encontraron resultados para "#{busqueda}".

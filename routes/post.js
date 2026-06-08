@@ -5,7 +5,7 @@ const {EstaAutenticado} = require('../middlewares/authMiddleware');
 //servirá para guardar las imagenes temporalmente en la RAM, porque se necesita subir a un servidor de terceros
 const multer = require('multer');
 
-//lo limito porque cloudinary en mi plan gratuito solo me permite subir como maximo 10 megas de archivo
+//lo limitamos porque cloudinary en mi plan gratuito solo me permite subir como maximo 10 megas de archivo
 const upload = multer({ 
     storage: multer.memoryStorage(),
     limits: {
@@ -14,9 +14,9 @@ const upload = multer({
 }).single('imageFile');
 
 
-router.get('/', EstaAutenticado, postController.mostrarFormulario);
+router.get('/crear', EstaAutenticado, postController.mostrarFormulario);
 
-router.post('/', EstaAutenticado, (req, res, next) => {
+router.post('/crear', EstaAutenticado, (req, res, next) => {
     upload(req, res, function (err) {
         if (err instanceof multer.MulterError) {
             if (err.code === 'LIMIT_FILE_SIZE') {
@@ -36,5 +36,11 @@ router.post('/', EstaAutenticado, (req, res, next) => {
         postController.guardarPublicacion(req, res, next);
     });
 });
+
+//ver detalle de publicacion
+router.get('/:id', postController.verDetalle);
+
+//crear comentario desde usuario autenticados
+router.post('/:id/comentar', EstaAutenticado, postController.agregarComentario);
 
 module.exports = router;

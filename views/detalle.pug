@@ -1,0 +1,57 @@
+doctype html
+html(lang="es")
+  head
+    title #{post.title} - Fotaza
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+  body
+    include layout.pug  
+
+    main.container.my-5
+      .row.justify-content-center
+        .col-md-8
+          
+          .card.shadow-sm.mb-4
+            img.card-img-top(src=imagen.file_path, alt=post.title, style="max-height: 500px; object-fit: contain; background: #f8f9fa;")
+            .card-body
+              h1.card-title.h3 #{post.title}
+              p.text-muted Licencia: 
+                span.badge.bg-secondary #{imagen.license.toUpperCase()}
+              p.card-text.lead #{post.description}
+              if imagen.watermark_text
+                p.text-muted.small.text-end Marca de agua: #{imagen.watermark_text}
+
+          
+          .card.shadow-sm
+            .card-header.bg-white
+              h2.h5.mb-0 Comentarios (#{comentarios.length})
+            .card-body
+              
+              if comentarios.length === 0
+                p.text-muted.text-center.my-3 No hay comentarios aún. ¡Sé el primero en comentar!
+              else
+                .list-group.list-group-flush.mb-4
+                  each com in comentarios
+                    .list-group-item.py-3
+                      .d-flex.justify-content-between.align-items-center
+                        strong.text-primary @#{com.Usuario.username}
+                        span.text-muted.small #{new Date(com.created_at).toLocaleDateString()}
+                      p.mb-0.mt-1.text-dark #{com.text}
+
+              
+              if post.comments_open
+                if usuarioLogueado
+                  hr
+                  h3.h6.mb-3 Deja tu comentario como @#{usuarioLogueado.UserName}
+                  form(action=`/post/${post.id}/comentar`, method="POST")
+                    .mb-3
+                      textarea.form-control(name="text", rows="3", placeholder="Escribe un comentario respetuoso...", required=true)
+                    .text-end
+                      button.btn.btn-primary(type="submit") Publicar Comentario
+                else
+                  .alert.alert-warning.text-center.mt-3(role="alert")
+                    | Debes 
+                    a.alert-link(href="/login") iniciar sesión
+                    |  para dejar un comentario en esta publicación.
+              else
+                .alert.alert-danger.text-center.mt-3(role="alert")
+                  | Los comentarios han sido desactivados para esta publicación.
