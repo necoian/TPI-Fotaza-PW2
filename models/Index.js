@@ -4,6 +4,7 @@ const Comment = require('./Comment');
 const Usuario = require('./Usuario');
 const Rating = require('./Rating');      
 const Interested = require('./Interested'); 
+const Follower = require('./Follower');
 
 
 Usuario.hasMany(Post, { foreignKey: 'user_id' });
@@ -32,6 +33,19 @@ Interested.belongsTo(Image, { foreignKey: 'image_id' });
 Usuario.hasMany(Interested, { foreignKey: 'user_id' });
 Interested.belongsTo(Usuario, { foreignKey: 'user_id' });
 
+Usuario.belongsToMany(Usuario, {
+    through: Follower,
+    as: 'Siguiendo',
+    foreignKey: 'follower_id',
+    otherKey: 'following_id'
+});
+
+Usuario.belongsToMany(Usuario, {
+    through: Follower,
+    as: 'Seguidores',
+    foreignKey: 'following_id',
+    otherKey: 'follower_id'
+});
 
 module.exports = {
     Post,
@@ -39,5 +53,6 @@ module.exports = {
     Comment,
     Usuario,
     Rating,      
-    Interested
+    Interested,
+    Follower
 };

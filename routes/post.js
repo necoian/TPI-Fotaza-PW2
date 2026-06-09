@@ -39,4 +39,6 @@ router.post('/:id/puntuar', EstaAutenticado, postController.puntuarImagen);
 
 router.post('/:id/interesar', EstaAutenticado, postController.registrarInteres);
 
+router.post('/user/follow/:userId', postController.toggleFollow);
+
 module.exports = router;

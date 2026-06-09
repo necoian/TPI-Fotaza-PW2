@@ -19,6 +19,17 @@ block content
                     if imagen.watermark_text
                         p.foto-firma Firma: #{imagen.watermark_text}
 
+               
+                if usuarioLogueado && post.Usuario && usuarioLogueado.id !== post.Usuario.id
+                    .follow-box(style="margin-top: 15px; margin-bottom: 15px;")
+                        span Creador: 
+                            strong @#{post.Usuario.username} 
+                        form(action=`/post/user/follow/${post.Usuario.id}`, method="POST", style="display:inline; margin-left: 10px;")
+                            if loEstoySiguiendo
+                                button.ink-btn(type="submit" style="background: #6c757d; color: white; padding: 4px 10px; font-size: 0.9rem;") Dejar de seguir
+                            else
+                                button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem;") Seguir
+
             
             
             .ink-interacciones-bloque
@@ -43,7 +54,7 @@ block content
                             option(value="5") 5 - Obra Maestra
 
                 
-                //- Mapeo de Promedio de Estrellas global
+                
                 .promedio-box(style="font-family: 'Architects Daughter', cursive; font-weight: bold; font-size: 1.1rem;")
                     span Puntuación: #{promedioEstrellas > 0 ? `${promedioEstrellas} / 5.0 ` : 'Sin calificaciones aún'}
 
@@ -62,11 +73,11 @@ block content
                                 span #{new Date(com.created_at).toLocaleDateString()}
                             p #{com.text}
 
-           
+            
             if post.comments_open
                 if usuarioLogueado
                     hr
-                    h3 Deja tu nota como @#{usuarioLogueado.UserName}
+                    h3 Deja tu nota como @#{usuarioLogueado.username}
                     form.ink-form(action=`/post/${post.id}/comentar`, method="POST")
                         .form-group
                             textarea.ink-input(name="text", rows="3", placeholder="Escribe un comentario", required=true)
@@ -76,6 +87,6 @@ block content
                     p.msg-alerta.alerta-advertencia
                         | Debes 
                         a(href="/login") iniciar sesión
-                        |  para dejar un comentario en esta publicación.
+                        |   para dejar un comentario en esta publicación.
             else
                 p.msg-alerta.alerta-error Los comentarios han sido desactivados para esta publicación.
