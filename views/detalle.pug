@@ -1,57 +1,81 @@
-doctype html
-html(lang="es")
-  head
-    title #{post.title} - Fotaza
-    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
-  body
-    include layout.pug  
+extends layout
 
-    main.container.my-5
-      .row.justify-content-center
-        .col-md-8
-          
-          .card.shadow-sm.mb-4
-            img.card-img-top(src=imagen.file_path, alt=post.title, style="max-height: 500px; object-fit: contain; background: #f8f9fa;")
-            .card-body
-              h1.card-title.h3 #{post.title}
-              p.text-muted Licencia: 
-                span.badge.bg-secondary #{imagen.license.toUpperCase()}
-              p.card-text.lead #{post.description}
-              if imagen.watermark_text
-                p.text-muted.small.text-end Marca de agua: #{imagen.watermark_text}
+block content
+    .ink-detalle-container
+        
+        article.ink-box.detalle-obra
+            h1 #{post.title}
+            
+            .contenedor-imagen-detalle
+                img.ink-img(src=imagen.file_path, alt=post.title)
+            
+            .detalle-info
+                p.foto-descripcion #{post.description}
+                
+                .info-meta-trazo
+                    p
+                        strong Licencia: 
+                        span(class=imagen.license === 'free' ? 'licencia-free' : 'licencia-premium') #{imagen.license.toUpperCase()}
+                    if imagen.watermark_text
+                        p.foto-firma Firma: #{imagen.watermark_text}
 
-          
-          .card.shadow-sm
-            .card-header.bg-white
-              h2.h5.mb-0 Comentarios (#{comentarios.length})
-            .card-body
-              
-              if comentarios.length === 0
-                p.text-muted.text-center.my-3 Sin comentarios
-              else
-                .list-group.list-group-flush.mb-4
-                  each com in comentarios
-                    .list-group-item.py-3
-                      .d-flex.justify-content-between.align-items-center
-                        strong.text-primary @#{com.Usuario.username}
-                        span.text-muted.small #{new Date(com.created_at).toLocaleDateString()}
-                      p.mb-0.mt-1.text-dark #{com.text}
-
-              
-              if post.comments_open
+            
+            
+            .ink-interacciones-bloque
+                
                 if usuarioLogueado
-                  hr
-                  h3.h6.mb-3 Deja tu comentario como @#{usuarioLogueado.UserName}
-                  form(action=`/post/${post.id}/comentar`, method="POST")
-                    .mb-3
-                      textarea.form-control(name="text", rows="3", placeholder="Escribe un comentario", required=true)
-                    .text-end
-                      button.btn.btn-primary(type="submit") Publicar Comentario
+                    form(action=`/post/${post.id}/interesar` method="POST")
+                        if yaInteresado
+                            button.ink-btn(type="submit" style="background: var(--ink-blue); color: var(--paper-white);") Quitar de Me Gusta
+                        else
+                            button.ink-btn(type="submit") Me Gusta
+                
+                
+                if usuarioLogueado
+                    form.rating-form(action=`/post/${post.id}/puntuar` method="POST")
+                        label(for="rating-select") Valorar trazo:
+                        select.ink-input#rating-select(name="stars" onchange="this.form.submit()")
+                            option(value="" disabled selected) Calificar
+                            option(value="1") 1 - Borrador
+                            option(value="2") 2 - Regular
+                            option(value="3") 3 - Bueno
+                            option(value="4") 4 - Muy Bueno
+                            option(value="5") 5 - Obra Maestra
+
+                
+                //- Mapeo de Promedio de Estrellas global
+                .promedio-box(style="font-family: 'Architects Daughter', cursive; font-weight: bold; font-size: 1.1rem;")
+                    span Puntuación: #{promedioEstrellas > 0 ? `${promedioEstrellas} / 5.0 ` : 'Sin calificaciones aún'}
+
+        
+        section.ink-box.seccion-comentarios
+            h2 Comentarios (#{comentarios.length})
+            
+            if comentarios.length === 0
+                p.no-results Sin comentarios
+            else
+                .lista-comentarios-ink
+                    each com in comentarios
+                        .comentario-item-ink
+                            .comentario-header
+                                strong @#{com.Usuario.username}
+                                span #{new Date(com.created_at).toLocaleDateString()}
+                            p #{com.text}
+
+           
+            if post.comments_open
+                if usuarioLogueado
+                    hr
+                    h3 Deja tu nota como @#{usuarioLogueado.UserName}
+                    form.ink-form(action=`/post/${post.id}/comentar`, method="POST")
+                        .form-group
+                            textarea.ink-input(name="text", rows="3", placeholder="Escribe un comentario", required=true)
+                        div(style="text-align: right; margin-top: 10px;")
+                            input.ink-btn(type="submit" value="Publicar Comentario")
                 else
-                  .alert.alert-warning.text-center.mt-3(role="alert")
-                    | Debes 
-                    a.alert-link(href="/login") iniciar sesión
-                    |  para dejar un comentario en esta publicación.
-              else
-                .alert.alert-danger.text-center.mt-3(role="alert")
-                  | Los comentarios han sido desactivados para esta publicación.
+                    p.msg-alerta.alerta-advertencia
+                        | Debes 
+                        a(href="/login") iniciar sesión
+                        |  para dejar un comentario en esta publicación.
+            else
+                p.msg-alerta.alerta-error Los comentarios han sido desactivados para esta publicación.

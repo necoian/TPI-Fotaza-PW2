@@ -1,21 +1,16 @@
-const sequelize = require('../config/db'); 
-const { Post, Image, Comment, Usuario } = require('../models/Index');
+const sequelize = require('../config/db');
+const { Post, Image, Comment, Usuario, Rating, Interested } = require('../models/Index');
 const cloudinary = require('../config/cloudinary');
-
 
 exports.verDetalle = async (req, res) => {
     try {
         const postId = req.params.id;
         const usuarioLogueado = req.session && req.session.usuario ? req.session.usuario : null;
 
-        
         const post = await Post.findByPk(postId, {
             include: [
-                { 
-                    model: Image, 
-                    required: false 
-                },
-                { 
+                { model: Image, required: false },
+                {
                     model: Comment,
                     required: false,
                     include: [{ model: Usuario, attributes: ['username'] }]
@@ -33,14 +28,46 @@ exports.verDetalle = async (req, res) => {
             return res.render('login', { error: "Debes iniciar sesión para ver esta publicación protegida." });
         }
 
-        
         const listaComentarios = post.Comments || [];
         listaComentarios.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
+        let promedioEstrellas = 0;
+        let yaInteresado = false;
+
+        if (imagen) {
+            
+            const [resultado] = await sequelize.query(
+                'SELECT AVG(score) AS promedio FROM ratings WHERE image_id = :idImagen',
+                {
+                    replacements: { idImagen: imagen.id },
+                    type: sequelize.QueryTypes.SELECT
+                }
+            );
+            
+            if (resultado && resultado.promedio) {
+                promedioEstrellas = parseFloat(resultado.promedio).toFixed(1);
+            }
+
+            
+            if (usuarioLogueado) {
+                const interesExistente = await Interested.findOne({
+                    where: {
+                        image_id: imagen.id,
+                        user_id: usuarioLogueado.id
+                    }
+                });
+                if (interesExistente) {
+                    yaInteresado = true;
+                }
+            }
+        }
+
         res.render('detalle', {
             post: post,
-            imagen: imagen || { file_path: '', license: 'free', watermark_text: '' },
-            comentarios: listaComentarios
+            imagen: imagen || { id: null, file_path: '', license: 'free', watermark_text: '' },
+            comentarios: listaComentarios,
+            promedioEstrellas: promedioEstrellas,
+            yaInteresado: yaInteresado
         });
 
     } catch (error) {
@@ -49,82 +76,141 @@ exports.verDetalle = async (req, res) => {
     }
 };
 
-
+// Controlador para guardar un comentario
 exports.agregarComentario = async (req, res) => {
     try {
         const postId = req.params.id;
         const { text } = req.body;
-        const userId = req.session.usuario.id; 
+        const usuarioLogueado = req.session.usuario;
 
-        if (!text || text.trim() === '') {
-            
-            return res.redirect(`/post/${postId}`);
+        if (!usuarioLogueado) {
+            return res.status(401).send("No autorizado.");
         }
 
-        
-        const post = await Post.findByPk(postId);
-        if (!post || !post.comments_open) {
-            return res.status(400).send("Los comentarios están cerrados para esta publicación.");
-        }
-
-        
         await Comment.create({
             post_id: postId,
-            user_id: userId,
-            text: text.trim(),
+            user_id: usuarioLogueado.id,
+            text: text,
+            is_deleted: false,
             created_at: new Date()
         });
 
-       
         res.redirect(`/post/${postId}`);
-
     } catch (error) {
-        console.error("Error al guardar el comentario:", error);
-        res.status(500).send("No se pudo publicar el comentario.");
+        console.error("Error al agregar comentario:", error);
+        res.status(500).send("Error al procesar el comentario.");
     }
 };
 
-exports.mostrarFormulario = (req, res) => {
-    res.render('publicar');
+
+exports.puntuarImagen = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { stars } = req.body; 
+        const usuarioLogueado = req.session.usuario;
+
+        const imagen = await Image.findOne({ where: { post_id: postId } });
+        if (!imagen) {
+            return res.status(404).send("Imagen no encontrada para este post.");
+        }
+
+        
+        const [ratingObj, creado] = await Rating.findOrCreate({
+            where: {
+                image_id: imagen.id,
+                user_id: usuarioLogueado.id
+            },
+            defaults: {
+                score: parseInt(stars), 
+                created_at: new Date()
+            }
+        });
+
+        if (!creado) {
+            
+            ratingObj.score = parseInt(stars);
+            await ratingObj.save();
+        }
+
+        res.redirect(`/post/${postId}`);
+    } catch (error) {
+        console.error("Error al puntuar la imagen:", error);
+        res.status(500).send("Error al registrar tu calificación.");
+    }
 };
 
-exports.guardarPublicacion = async (req, res) => {
-    let contenidoImagen = null;
-    let t = null; 
+//like
+exports.registrarInteres = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const usuarioLogueado = req.session.usuario;
 
+        if (!usuarioLogueado) {
+            return res.status(401).send("Debes iniciar sesión para darle like.");
+        }
+
+        
+        const imagen = await Image.findOne({ where: { post_id: postId } });
+        if (!imagen) {
+            return res.status(404).send("Imagen no encontrada para este post.");
+        }
+
+       
+        const interesExistente = await Interested.findOne({
+            where: {
+                image_id: imagen.id,
+                user_id: usuarioLogueado.id
+            }
+        });
+
+        if (interesExistente) {
+            
+            await interesExistente.destroy();
+        } else {
+            
+            await Interested.create({
+                image_id: imagen.id,
+                user_id: usuarioLogueado.id,
+                created_at: new Date()
+            });
+        }
+
+        res.redirect(`/post/${postId}`);
+    } catch (error) {
+        console.error("Error al registrar interés:", error);
+        res.status(500).send("Error al procesar la solicitud de interés.");
+    }
+};
+
+
+exports.mostrarFormulario = (req, res) => {
+    res.render('publicar', { error: null, datosCompletados: null });
+};
+
+
+exports.guardarPublicacion = async (req, res) => {
+    let t;
     try {
         const { title, description, license, watermarkText } = req.body;
-        const userId = req.session && req.session.usuario ? req.session.usuario.id : null;
+        const userId = req.session.usuario.id;
 
         if (!req.file) {
-            return res.render('publicar', { error: "Debes seleccionar un archivo de imagen obligatoriamente" });
+            return res.render('publicar', { error: "Debes seleccionar un archivo de imagen.", datosCompletados: req.body });
         }
 
-        if (!userId) {
-            return res.render('publicar', { error: "Tu sesión ha expirado. Inicia sesión nuevamente" });
-        }
-
-        const tieneCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY;
-
-        if (tieneCloudinary) {
-            const subirACloudinary = () => {
-                return new Promise((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        { folder: 'Inicio/PWII' },
-                        (error, result) => {
-                            if (error) return reject(error);
-                            resolve(result);
-                        }
-                    );
-                    stream.end(req.file.buffer);
-                });
-            };
-
-            const resultadoCloudinary = await subirACloudinary();
+        let contenidoImagen = null;
+        //MUY IMPORTANTE, SI NO TIENE LAS CREDENCIALES CLOUDINARY SE GUARDARA EN BASE64
+        if (process.env.CLOUDINARY_URL) {
+            const resultadoCloudinary = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream({ folder: 'fotaza' }, (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }).end(req.file.buffer);
+            });
             contenidoImagen = resultadoCloudinary.secure_url || resultadoCloudinary.url || null;
         } else {
             const imagenBase64 = req.file.buffer.toString('base64');
-            const mimeType = req.file.mimetype; 
+            const mimeType = req.file.mimetype;
             contenidoImagen = `data:${mimeType};base64,${imagenBase64}`;
         }
 
@@ -132,10 +218,8 @@ exports.guardarPublicacion = async (req, res) => {
             throw new Error("No se pudo procesar el contenido de la imagen");
         }
 
-        
         t = await sequelize.transaction();
 
-        
         const nuevoPost = await Post.create({
             user_id: userId,
             title: title,
@@ -145,7 +229,6 @@ exports.guardarPublicacion = async (req, res) => {
             created_at: new Date()
         }, { transaction: t });
 
-        
         await Image.create({
             post_id: nuevoPost.id,
             file_path: contenidoImagen,
@@ -155,21 +238,12 @@ exports.guardarPublicacion = async (req, res) => {
             created_at: new Date()
         }, { transaction: t });
 
-        
         await t.commit();
-        console.log("Publicación guardada");
-
         res.redirect('/');
 
     } catch (error) {
-        console.error("Error en el controlador de publicaciones:", error.message);
-        
-        
+        console.error("Error de publicacion:", error.message);
         if (t) await t.rollback();
-
-        res.render('publicar', {
-            error: `Ocurrió un error al procesar la publicación: (${error.message})`,
-            datosCompletados: req.body
-        });
+        res.render('publicar', { error: error.message, datosCompletados: req.body });
     }
 };

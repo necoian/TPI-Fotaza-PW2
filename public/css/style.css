@@ -284,3 +284,103 @@ footer {
     text-decoration: underline dashed;
     margin: 10px 0;
 }
+
+.ink-detalle-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 800px;
+    margin: 0 auto; 
+    padding: 20px 0;
+}
+
+
+.contenedor-imagen-detalle {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.contenedor-imagen-detalle .ink-img {
+    max-height: 500px;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+/* Metadata inferior */
+.info-meta-trazo {
+    margin-top: 15px;
+    border-top: 1px dashed var(--ink-blue);
+    padding-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.ink-interacciones-bloque {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 2px solid var(--ink-blue);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.rating-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rating-form select.ink-input {
+    width: auto;
+    padding: 5px 10px;
+}
+
+
+.lista-comentarios-ink {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.comentario-item-ink {
+    border-bottom: 1px dashed var(--ink-blue);
+    padding-bottom: 12px;
+}
+
+.comentario-header {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Architects Daughter', cursive;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+}
+
+
+.msg-alerta {
+    text-align: center;
+    padding: 12px;
+    border-radius: 4px;
+    font-family: 'Architects Daughter', cursive;
+    font-weight: bold;
+}
+
+.alerta-advertencia {
+    border: 2px dashed #d35400;
+    color: #d35400;
+}
+
+.alerta-advertencia a {
+    color: #d35400;
+    text-decoration: underline;
+}
+
+.alerta-error {
+    border: 2px dashed #c0392b;
+    color: #c0392b;
+}
