@@ -16,32 +16,24 @@ block content
       
       h1(style="margin-top: 10px;") @#{perfilUsuario.username}
 
-      
       .stats(style="display: flex; justify-content: center; gap: 30px; margin: 20px 0;")
-        
-        
         - var textoEstilo = "font-size: 0.9rem; color: #666; margin-top: 4px;"
         - var textoInteractivoEstilo = "font-size: 0.9rem; color: #666; margin-top: 4px; cursor: pointer; user-select: none;"
         - var numeroEstilo = "font-size: 1.2rem; font-weight: bold; color: #333;"
-        
         
         div(style="text-align: center; position: relative;")
           div(style=numeroEstilo) #{seguidoresContador}
           div(style=textoInteractivoEstilo, onclick=`mostrarLista(${perfilUsuario.id}, 'seguidores')`) Seguidores
           
-          
           div(id="lista-seguidores" style="display:none; border: 1px solid #ddd; padding: 10px; margin-top: 5px; background: white; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; min-width: 120px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);")
             ul(id="contenido-lista-seguidores" style="list-style:none; padding:0; margin:0; font-size: 0.9rem; color: #333;")
-        
         
         div(style="text-align: center; position: relative;")
           div(style=numeroEstilo) #{seguidosContador}
           div(style=textoInteractivoEstilo, onclick=`mostrarLista(${perfilUsuario.id}, 'seguidos')`) Seguidos
           
-          
           div(id="lista-seguidos" style="display:none; border: 1px solid #ddd; padding: 10px; margin-top: 5px; background: white; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; min-width: 120px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);")
             ul(id="contenido-lista-seguidos" style="list-style:none; padding:0; margin:0; font-size: 0.9rem; color: #333;")
-        
         
         div(style="text-align: center;")
           div(style=numeroEstilo) #{postsUsuario.length}
@@ -56,14 +48,22 @@ block content
             button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem; border: none; cursor: pointer; border-radius: 4px;") 
               | Seguir
 
+    
     .galeria(style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;")
       each post in postsUsuario
-        if post.Images && post.Images.length > 0
-          a(href=`/post/${post.id}`)
-            img(src=post.Images[0].file_path, style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;")
-        else
-          div(style="background: #eee; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;") 
-            | Sin imagen
+        div(style="position: relative;") 
+          if post.Images && post.Images.length > 0
+            a(href=`/post/${post.id}`)
+              img(src=post.Images[0].file_path, style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; display: block;")
+          else
+            div(style="background: #eee; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;") 
+              | Sin imagen
+
+          
+          if usuarioLogueado && usuarioLogueado.id === perfilUsuario.id
+            form(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.');" style="position: absolute; top: 10px; right: 10px; margin: 0;")
+              button.ink-btn(type="submit" style="background: rgba(220, 53, 69, 0.9); color: white; padding: 4px 8px; font-size: 0.75rem; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);")
+                | Borrar
 
   script.
     async function mostrarLista(userId, tipo) {

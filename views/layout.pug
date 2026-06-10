@@ -14,8 +14,14 @@ html(lang="es")
                 a(href="/") Fotaza 2
                 span  | 
                 if usuarioLogueado
-                    span Bienvenido, @#{usuarioLogueado.UserName} ! 
+                    
+                    span Bienvenido, #{usuarioLogueado.username || usuarioLogueado.UserName} ! 
                     span  | 
+                    
+                    
+                    a(href=`/user/perfil/${usuarioLogueado.id}`) Mi Perfil
+                    span  | 
+                    
                     a(href="/post/crear") Enviar Publicación
                     span  | 
                     a(href="/login/logout") Cerrar Sesión

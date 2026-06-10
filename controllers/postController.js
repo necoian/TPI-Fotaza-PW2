@@ -213,47 +213,160 @@ exports.mostrarFormulario = (req, res) => {
 exports.guardarPublicacion = async (req, res) => {
     let t;
     try {
-        const { title, description, license, watermarkText } = req.body;
-        const userId = req.session.usuario.id;
+        const { title, description, license, watermarkText, comments_open } = req.body;
+        const usuarioLogueado = req.session.usuario;
 
+        
+        if (!usuarioLogueado) {
+            return res.redirect('/login');
+        }
+
+        
         if (!req.file) {
-            return res.render('publicar', { error: "Debes seleccionar un archivo de imagen.", datosCompletados: req.body });
-        }
-
-        let contenidoImagen = null;
-        //MUY IMPORTANTE, SI NO TIENE LAS CREDENCIALES CLOUDINARY SE GUARDARA EN BASE64
-        if (process.env.CLOUDINARY_URL) {
-            const resultadoCloudinary = await new Promise((resolve, reject) => {
-                cloudinary.uploader.upload_stream({ folder: 'fotaza' }, (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }).end(req.file.buffer);
+            return res.render('publicar', { 
+                error: "Por favor, selecciona una imagen.", 
+                datosCompletados: req.body 
             });
-            contenidoImagen = resultadoCloudinary.secure_url || resultadoCloudinary.url || null;
-        } else {
-            const imagenBase64 = req.file.buffer.toString('base64');
-            const mimeType = req.file.mimetype;
-            contenidoImagen = `data:${mimeType};base64,${imagenBase64}`;
         }
 
-        if (!contenidoImagen) {
-            throw new Error("No se pudo procesar el contenido de la imagen");
+        
+        let contenidoImagenFinal = '';
+
+        try {
+            
+            console.log("Intentando subir imagen a Cloudinary");
+            
+            const subirACloudinary = (fileBuffer) => {
+                return new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: 'fotaza_posts', quality: "auto" },
+                        (error, result) => {
+                            if (error) return reject(error);
+                            resolve(result);
+                        }
+                    );
+                    stream.end(fileBuffer);
+                });
+            };
+
+            const resultadoCloudinary = await subirACloudinary(req.file.buffer);
+            contenidoImagenFinal = resultadoCloudinary.secure_url; 
+            console.log("Imagen subida. URL:", contenidoImagenFinal);
+
+        } catch (errorCloudinary) {
+            
+            console.warn("Cloudinary falló o no está configurado. Convirtiendo a Base64 de respaldo");
+            
+            const tipoMime = req.file.mimetype; 
+            const cadenaBase64 = req.file.buffer.toString('base64');
+            
+            contenidoImagenFinal = `data:${tipoMime};base64,${cadenaBase64}`;
+            console.log("Imagen convertida a Base64.");
         }
 
+       
         t = await sequelize.transaction();
 
         const nuevoPost = await Post.create({
-            user_id: userId,
+            user_id: usuarioLogueado.id,
             title: title,
             description: description,
-            status: 'active',
-            comments_open: true,
+            status: 'active', 
+            comments_open: comments_open === 'on' ? true : false,
+            created_at: new Date()
+        }, { 
+            transaction: t
+        });
+
+        await Image.create({
+            post_id: nuevoPost.id,
+            file_path: contenidoImagenFinal, 
+            license: license,
+            watermark_text: watermarkText,
+            order_index: 0,
+            created_at: new Date()
+        }, { transaction: t });
+
+
+        await t.commit();
+        console.log("Publicación guardada en la BD");
+        
+        res.redirect('/');
+
+    } catch (error) {
+        console.error("Error crítico de publicación en Base de Datos:", error.message);
+        if (t) await t.rollback();
+        
+        res.render('publicar', { 
+            error: `Error al procesar o subir la publicación: ${error.message}`, 
+            datosCompletados: req.body 
+        });
+    }
+};
+exports.guardarPublicacion = async (req, res) => {
+    let t;
+    try {
+        const { title, description, license, watermarkText, comments_open } = req.body;
+        const usuarioLogueado = req.session.usuario;
+
+        if (!usuarioLogueado) {
+            return res.redirect('/login');
+        }
+
+        // VALIDACIÓN: Verificar que el archivo de imagen realmente llegó desde Multer
+        if (!req.file) {
+            return res.render('publicar', { 
+                error: "Por favor, selecciona una imagen para subir.", 
+                datosCompletados: req.body 
+            });
+        }
+
+        // --- PROMESA PARA SUBIR EL BUFFER DE MEMORIA A CLOUDINARY ---
+        const subirACloudinary = (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+                // Usamos upload_stream porque Multer está configurado en MemoryStorage
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'fotaza_posts', // Carpeta donde se guardarán en tu Cloudinary
+                        transformation: [
+                            // Aquí puedes aplicar tu marca de agua si lo deseas usando watermarkText
+                            { quality: "auto" } 
+                        ]
+                    },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result); // Contiene secure_url, public_id, etc.
+                    }
+                );
+                // Escribimos el buffer del archivo en el stream de Cloudinary
+                stream.end(fileBuffer);
+            });
+        };
+
+        // Ejecutamos la subida y esperamos la respuesta de Cloudinary
+        console.log("Subiendo imagen a Cloudinary...");
+        const resultadoCloudinary = await subirACloudinary(req.file.buffer);
+        
+        // ¡ESTA ES LA URL REAL DE INTERNET!
+        const urlImagenCloudinary = resultadoCloudinary.secure_url; 
+        console.log("Imagen subida con éxito. URL:", urlImagenCloudinary);
+
+
+        // --- PROCESO DE BASE DE DATOS (TRANSACTION) ---
+        t = await sequelize.transaction();
+
+        const nuevoPost = await Post.create({
+            user_id: usuarioLogueado.id,
+            title: title,
+            description: description,
+            status: 'public', 
+            comments_open: comments_open === 'on' ? true : false,
             created_at: new Date()
         }, { transaction: t });
 
         await Image.create({
             post_id: nuevoPost.id,
-            file_path: contenidoImagen,
+            file_path: urlImagenCloudinary, // 👈 CORREGIDO: Guardamos la URL de Cloudinary, NO el base64 ni el buffer
             license: license,
             watermark_text: watermarkText,
             order_index: 0,
@@ -266,6 +379,80 @@ exports.guardarPublicacion = async (req, res) => {
     } catch (error) {
         console.error("Error de publicacion:", error.message);
         if (t) await t.rollback();
-        res.render('publicar', { error: error.message, datosCompletados: req.body });
+        res.render('publicar', { 
+            error: `Error al procesar o subir la publicación: ${error.message}`, 
+            datosCompletados: req.body 
+        });
+    }
+};
+
+exports.eliminarPost = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const usuarioLogueado = req.session.usuario;
+
+        if (!usuarioLogueado) {
+            return res.redirect('/login');
+        }
+
+        const post = await Post.findByPk(postId);
+
+        if (!post) {
+            return res.status(404).send("El post no existe.");
+        }
+
+        // Tiene que ser el usuario logueado el que elimine el post
+        if (post.user_id !== usuarioLogueado.id) {
+            return res.status(403).send("No tienes permiso para eliminar esta publicación.");
+        }
+
+        await post.destroy();
+
+        res.redirect(`/user/perfil/${usuarioLogueado.id}`);
+
+    } catch (error) {
+        console.error("Error al eliminar el post:", error);
+        res.status(500).send("Hubo un error al intentar eliminar la publicación.");
+    }
+};
+
+
+exports.obtenerHome = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 8;
+        const offset = parseInt(req.query.offset) || 0;
+        const usuarioLogueado = req.session && req.session.usuario ? req.session.usuario : null;
+
+        
+        const { count, rows: posts } = await Post.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            order: [['created_at', 'DESC']], 
+            include: [
+                { 
+                    model: Image, 
+                    required: false 
+                }
+            ]
+        });
+
+        
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            return res.json({
+                posts: posts,
+                tieneMas: offset + limit < count
+            });
+        }
+
+        
+        res.render('index', { 
+            postsIniciales: posts, 
+            tieneMasInicial: limit < count,
+            usuarioLogueado: usuarioLogueado 
+        });
+
+    } catch (error) {
+        console.error("Error en obtenerHome:", error);
+        res.status(500).send("Error interno del servidor.");
     }
 };

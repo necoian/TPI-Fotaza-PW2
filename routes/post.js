@@ -10,6 +10,7 @@ const upload = multer({
 }).single('imageFile');
 
 router.get('/crear', EstaAutenticado, postController.mostrarFormulario);
+
 router.post('/crear', EstaAutenticado, (req, res, next) => {
     upload(req, res, function (err) {
         if (err instanceof multer.MulterError) {
@@ -30,13 +31,15 @@ router.post('/crear', EstaAutenticado, (req, res, next) => {
 });
 
 
-router.get('/:id', postController.verDetalle);
 
+router.get('/:id', postController.verDetalle);
 
 router.post('/:id/comentar', EstaAutenticado, postController.agregarComentario);
 
 router.post('/:id/puntuar', EstaAutenticado, postController.puntuarImagen);
 
 router.post('/:id/interesar', EstaAutenticado, postController.registrarInteres);
+
+router.post('/:id/eliminar', postController.eliminarPost);
 
 module.exports = router;

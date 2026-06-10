@@ -19,7 +19,7 @@ block content
                     if imagen.watermark_text
                         p.foto-firma Firma: #{imagen.watermark_text}
 
-               
+                
                 if usuarioLogueado && post.Usuario && usuarioLogueado.id !== post.Usuario.id
                     .follow-box(style="margin-top: 15px; margin-bottom: 15px;")
                         span Creador: 
@@ -31,9 +31,6 @@ block content
                             else
                                 button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem;") Seguir
                                 
-                            
-
-                            
             
             .ink-interacciones-bloque
                 
@@ -57,9 +54,14 @@ block content
                             option(value="5") 5 - Obra Maestra
 
                 
-                
                 .promedio-box(style="font-family: 'Architects Daughter', cursive; font-weight: bold; font-size: 1.1rem;")
                     span Puntuación: #{promedioEstrellas > 0 ? `${promedioEstrellas} / 5.0 ` : 'Sin calificaciones aún'}
+
+                
+                if usuarioLogueado && usuarioLogueado.id === post.user_id
+                    form(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.');" style="display: inline-block; margin-left: auto;")
+                        button.ink-btn(type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; cursor: pointer;")
+                            | Eliminar Publicación
 
         
         section.ink-box.seccion-comentarios

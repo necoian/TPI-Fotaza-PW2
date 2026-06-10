@@ -1,43 +1,100 @@
 extends layout
 
 block content
-    h1 Explorar Publicaciones
+  .container(style="max-width: 1200px; margin: 0 auto; padding: 20px;")
+    h1(style="text-align: center; margin-bottom: 30px;") Donde todo comienza
+    
+    
+    .galeria#grilla-home
+      if postsIniciales && postsIniciales.length > 0
+        each post in postsIniciales
+          
+          .tarjeta-foto.ink-box
+            if post.Images && post.Images.length > 0
+              a(href=`/post/${post.id}`)
+                img.ink-img(src=post.Images[0].file_path, alt=post.title)
+            else
+              div.ink-img(style="background: #eee; height: 180px; display: flex; align-items: center; justify-content: center; font-style: italic; opacity: 0.7;") 
+                | Sin imagen
+            
+            
+            h3(style="font-size: 1.1rem; margin: 10px 0 5px 0; text-align: center;") #{post.title}
+            
+            if post.description
+              p.foto-descripcion #{post.description}
+            
+            
+            .tarjeta-footer
+              a.ink-btn(href=`/post/${post.id}`) Ver Detalle
+      else
+        p.no-results No hay publicaciones disponibles en este momento.
 
     
-    form.search-form(action="/" method="GET")
-        input.ink-input(
-            type="text" 
-            name="search" 
-            placeholder="Buscar por título o descripción..." 
-            value=busqueda
-        )
-        input.ink-btn(type="submit" value="Buscar")
-        if busqueda
-            a.ink-link-clear(href="/") Limpiar filtros
+    .contenedor-ver-mas(style="text-align: center; margin-top: 50px;")
+      button#btn-ver-mas.ink-btn(
+        onclick="cargarMasPosts()", 
+        style=tieneMasInicial ? "display: inline-block;" : "display: none;"
+      ) Ver más
 
-    // Galería de Imágenes
-    if fotos && fotos.length > 0
-        div.galeria
-            each foto in fotos
-                div.ink-box.tarjeta-foto
-                    h3 #{foto.title}
-                    img.ink-img(src=foto.file_path, alt=foto.title)
+  
+  script.
+    let offsetActual = 8; 
+    const limite = 8;
+
+    async function cargarMasPosts() {
+        const btn = document.getElementById('btn-ver-mas');
+        const grilla = document.getElementById('grilla-home');
+        
+        btn.innerText = "Cargando...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`/?limit=${limite}&offset=${offsetActual}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+
+            if (data.posts && data.posts.length > 0) {
+                data.posts.forEach(post => {
                     
-                    if foto.description
-                        p.foto-descripcion #{foto.description}
-                        
-                    p.foto-licencia
-                        strong Licencia: 
-                        span(class=foto.license === 'free' ? 'licencia-free' : 'licencia-premium') #{foto.license}
-                        
-                    if foto.watermark_text
-                        p.foto-firma
-                            small Firma: #{foto.watermark_text}
-                            
-                    div.tarjeta-footer
-                        a.ink-btn(href=`/post/${foto.id}`) Ver detalles y comentarios
-    else
-        if busqueda
-            p.no-results No se encontraron trazos ni resultados para "#{busqueda}".
-        else
-            p.no-results No hay apuntes ni publicaciones disponibles en este momento.
+                    const imagenesAsociadas = post.Images || post.images || [];
+                    const tieneImagen = imagenesAsociadas.length > 0;
+                    
+                    const imgHtml = tieneImagen 
+                        ? `<img class="ink-img" src="${imagenesAsociadas[0].file_path}" alt="${post.title}">`
+                        : `<div class="ink-img" style="background: #eee; height: 180px; display: flex; align-items: center; justify-content: center; font-style: italic; opacity: 0.7;">Sin imagen</div>`;
+
+                    const descHtml = post.description 
+                        ? `<p class="foto-descripcion">${post.description}</p>` 
+                        : '';
+
+                    
+                    const postHtml = `
+                        <div class="tarjeta-foto ink-box">
+                            <a href="/post/${post.id}">${imgHtml}</a>
+                            <h3 style="font-size: 1.1rem; margin: 10px 0 5px 0; text-align: center;">${post.title}</h3>
+                            ${descHtml}
+                            <div class="tarjeta-footer">
+                                <a class="ink-btn" href="/post/${post.id}">Ver Detalle</a>
+                            </div>
+                        </div>
+                    `;
+                    grilla.insertAdjacentHTML('beforeend', postHtml);
+                });
+
+                offsetActual += limite;
+            }
+
+            if (!data.tieneMas) {
+                btn.style.display = 'none';
+            } else {
+                btn.innerText = "Ver más";
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Error al cargar más publicaciones:", error);
+            btn.innerText = "Error al cargar. Reintentar";
+            btn.disabled = false;
+        }
+    }

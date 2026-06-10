@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict WrbSNfgBupGVDU33QuUgQyO32MGbJUoPtE3VkCRbktft5R4PYE0AXVUwOWIfrqQ
+\restrict 7MVufkOfiCLKZAa4ARrunxnaFf5vrq5ST0baZW2SwShb2Q7vj2nCjLXywLcVgai
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.4
@@ -311,8 +311,7 @@ CREATE TABLE public.post (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     update_at timestamp without time zone,
     report_count integer DEFAULT 0,
-    is_blocked boolean DEFAULT false,
-    CONSTRAINT post_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'remove'::character varying, 'pending'::character varying])::text[])))
+    is_blocked boolean DEFAULT false
 );
 
 
@@ -691,6 +690,7 @@ INSERT INTO public.images (id, post_id, file_path, license, watermark_text, orde
 INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (5, 5, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268597/CampoColorido_jmwqvo.jpg', 'free', 'deIanPereyra', 0, '2026-06-01 04:01:05');
 INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (6, 6, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780268595/paisajePintado_wcawqq.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 04:03:56');
 INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (8, 7, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780267677/FlorBlanca_szbjxu.jpg', 'free', 'deRominaTolosa', 0, '2026-06-01 04:07:41');
+INSERT INTO public.images (id, post_id, file_path, license, watermark_text, order_index, created_at) VALUES (9, 8, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780888971/Inicio/PWII/yedfuqll7zbi2eiemx4t.jpg', 'copyright', 'del Admin', 0, '2026-06-08 03:22:51.780246');
 
 
 --
@@ -722,6 +722,7 @@ INSERT INTO public.post (id, user_id, title, description, status, comments_open,
 INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (5, 3, 'Una vida tranquila', 'Ya estoy cansado de la ciudad, quiero vivir en un lugar asiii', 'active', true, '2026-06-01 04:00:29', NULL, 0, false);
 INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (6, 2, 'El medio', 'Me gusta que todo esté fielmente en equilibrio, como en esta pintura', 'active', true, '2026-06-01 04:03:00', NULL, 0, false);
 INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (7, 2, 'La flor blanca', 'Ahora la flor es lo blanco, con suaves y sutiles tonos mas oscuros para producir una tenue sombra. Pero esta flor siempre brilla...', 'active', true, '2026-06-01 04:06:45', NULL, 0, false);
+INSERT INTO public.post (id, user_id, title, description, status, comments_open, created_at, update_at, report_count, is_blocked) VALUES (8, 1, 'Hermosas Rosas', ' Es un archivo con copyright, no lo pueden ver los no autenticados', 'active', true, '2026-06-08 03:22:51.780246', NULL, 0, false);
 
 
 --
@@ -803,7 +804,7 @@ SELECT pg_catalog.setval('public.image_report_id_seq', 1, false);
 -- Name: images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.images_id_seq', 8, true);
+SELECT pg_catalog.setval('public.images_id_seq', 9, true);
 
 
 --
@@ -824,7 +825,7 @@ SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
 -- Name: post_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.post_id_seq', 7, true);
+SELECT pg_catalog.setval('public.post_id_seq', 8, true);
 
 
 --
@@ -1319,5 +1320,5 @@ ALTER TABLE ONLY public.validator_queue
 -- PostgreSQL database dump complete
 --
 
-\unrestrict WrbSNfgBupGVDU33QuUgQyO32MGbJUoPtE3VkCRbktft5R4PYE0AXVUwOWIfrqQ
+\unrestrict 7MVufkOfiCLKZAa4ARrunxnaFf5vrq5ST0baZW2SwShb2Q7vj2nCjLXywLcVgai
 

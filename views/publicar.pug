@@ -8,7 +8,7 @@ block content
             if error
                 p.ink-error #{error}
                 
-            form.ink-form(action='/publicar' method='post' enctype='multipart/form-data')
+            form.ink-form(action='/post/crear' method='post' enctype='multipart/form-data')
                 .form-group
                     label(for='title') Título:
                     input.ink-input(type='text' name='title' id='title' value=(datosCompletados ? datosCompletados.title : '') required)
