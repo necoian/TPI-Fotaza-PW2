@@ -20,7 +20,7 @@ Usuario.hasMany(Comment, { foreignKey: 'user_id' });
 Comment.belongsTo(Usuario, { foreignKey: 'user_id' });
 
 
-// Relaciones para Calificaciones (Asociadas a la Imagen)
+// Relaciones para Calificaciones
 Image.hasMany(Rating, { foreignKey: 'image_id' });
 Rating.belongsTo(Image, { foreignKey: 'image_id' });
 
@@ -32,6 +32,9 @@ Interested.belongsTo(Image, { foreignKey: 'image_id' });
 
 Usuario.hasMany(Interested, { foreignKey: 'user_id' });
 Interested.belongsTo(Usuario, { foreignKey: 'user_id' });
+
+Follower.belongsTo(Usuario, { as: 'Seguidor', foreignKey: 'follower_id' });
+Follower.belongsTo(Usuario, { as: 'Siguiendo', foreignKey: 'following_id' });
 
 Usuario.belongsToMany(Usuario, {
     through: Follower,

@@ -14,7 +14,7 @@ exports.verDetalle = async (req, res) => {
                 {
                     model: Comment,
                     required: false,
-                    include: [{ model: Usuario, attributes: ['username'] }]
+                    include: [{ model: Usuario, attributes: ['id','username'] }]
                 }
             ]
         });
@@ -201,49 +201,6 @@ exports.registrarInteres = async (req, res) => {
     } catch (error) {
         console.error("Error al registrar interés:", error);
         res.status(500).send("Error al procesar la solicitud de interés.");
-    }
-};
-
-exports.toggleFollow = async (req, res) => {
-    try {
-        const userIdToFollow = req.params.userId; 
-        const usuarioLogueado = req.session.usuario;
-
-        if (!usuarioLogueado) {
-            return res.render('login', { 
-                error: "Debes iniciar sesión para poder seguir a otros usuarios." 
-            });
-        }
-
-        if (parseInt(userIdToFollow) === usuarioLogueado.id) {
-            
-            res.redirect(req.get('referer') || '/');
-        }
-
-        const seguimientoExistente = await Follower.findOne({
-            where: {
-                follower_id: usuarioLogueado.id,
-                following_id: userIdToFollow
-            }
-        });
-
-        if (seguimientoExistente) {
-            
-            await seguimientoExistente.destroy();
-        } else {
-            
-            await Follower.create({
-                follower_id: usuarioLogueado.id,
-                following_id: userIdToFollow,
-                created_at: new Date()
-            });
-        }
-
-       
-        res.redirect(req.get('referer') || '/');
-    } catch (error) {
-        console.error("Error en toggleFollow:", error);
-        res.status(500).send("Error al procesar el seguimiento.");
     }
 };
 

@@ -24,6 +24,7 @@ app.use((req, res, next) => {
 const indexRoutes = require('./routes/index');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/post');
+const userRoutes = require('./routes/user');
 
 // const commentRoutes = require('./routes/comment'); 
 
@@ -40,6 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', indexRoutes);
 app.use('/login', authRoutes);
 app.use('/post', postRoutes);
+app.use('/user', userRoutes);
 // rutas de comentarios
 // app.use('/', commentRoutes); 
 

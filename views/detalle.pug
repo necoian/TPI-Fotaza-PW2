@@ -23,14 +23,17 @@ block content
                 if usuarioLogueado && post.Usuario && usuarioLogueado.id !== post.Usuario.id
                     .follow-box(style="margin-top: 15px; margin-bottom: 15px;")
                         span Creador: 
-                            strong @#{post.Usuario.username} 
-                        form(action=`/post/user/follow/${post.Usuario.id}`, method="POST", style="display:inline; margin-left: 10px;")
+                            a(href=`/user/perfil/${post.Usuario.id}` style="text-decoration: none; color: var(--ink-blue); font-weight: bold;")
+                                | @#{post.Usuario.username}
+                        form(action=`/user/follow/${post.Usuario.id}`, method="POST", style="display:inline; margin-left: 10px;")
                             if loEstoySiguiendo
                                 button.ink-btn(type="submit" style="background: #6c757d; color: white; padding: 4px 10px; font-size: 0.9rem;") Dejar de seguir
                             else
                                 button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem;") Seguir
+                                
+                            
 
-            
+                            
             
             .ink-interacciones-bloque
                 
@@ -69,7 +72,8 @@ block content
                     each com in comentarios
                         .comentario-item-ink
                             .comentario-header
-                                strong @#{com.Usuario.username}
+                                a(href=`/user/perfil/${com.Usuario.id}` style="text-decoration: none; color: inherit;")
+                                    strong @#{com.Usuario.username}
                                 span #{new Date(com.created_at).toLocaleDateString()}
                             p #{com.text}
 
