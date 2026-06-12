@@ -5,7 +5,6 @@ html(lang="es")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
         title Fotaza 2
         
-        
         link(rel="stylesheet", href="/css/style.css")
         
     body
@@ -14,19 +13,17 @@ html(lang="es")
                 a(href="/") Fotaza 2
                 span  | 
                 if usuarioLogueado
-                    
                     span Bienvenido, #{usuarioLogueado.username || usuarioLogueado.UserName} ! 
                     span  | 
-                    
-                    
                     a(href=`/user/perfil/${usuarioLogueado.id}`) Mi Perfil
                     span  | 
-                    
                     a(href="/post/crear") Enviar Publicación
                     span  | 
                     a(href="/login/logout") Cerrar Sesión
                 else
                     a(href="/login") Iniciar Sesión
+                    span  | 
+                    a(href="/login/registro") Registrarse
 
         hr
 

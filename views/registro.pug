@@ -1,0 +1,34 @@
+extends layout
+
+block content
+    .ink-form-container
+        .ink-box.ink-form-card
+            h1 Crear nueva cuenta
+            
+            if error
+                p.ink-error  #{error}
+                
+            form.ink-form(action='/login/registro' method='post' enctype='multipart/form-data')
+                .form-group
+                    label(for='username') Nombre de usuario:
+                    input.ink-input(type='text' name='username' id='username' value=(datos ? datos.username : '') placeholder='Tu alias de autor...' required)
+                
+                .form-group
+                    label(for='email') Correo Electrónico:
+                    input.ink-input(type='email' name='email' id='email' value=(datos ? datos.email : '') placeholder='ejemplo@correo.com' required)
+                
+                .form-group
+                    label(for='password') Contraseña:
+                    input.ink-input(type='password' name='password' id='password' placeholder='••••••••' required)
+                
+                .form-group
+                    label(for='avatarFile') Seleccionar Foto de Perfil (Opcional):
+                    input.ink-input(type='file' name='avatarFile' id='avatarFile' accept='image/*')
+                
+                div(style="text-align: right; margin-top: 15px;")
+                    input.ink-btn(type='submit' value='¡Registrarme!')
+            
+            
+            .info-meta-trazo(style="margin-top: 20px; justify-content: center;")
+                p ¿Ya eres parte de Fotaza? 
+                    a(href="/login" style="color: var(--ink-blue); font-weight: bold; margin-left: 5px;") Inicia sesión aquí

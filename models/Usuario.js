@@ -22,6 +22,11 @@ const Usuario = sequelize.define('Usuario', {
     role_id: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    avatar_url: {
+        type: DataTypes.TEXT, 
+        allowNull: true,       
+        field: 'avatar_url'    
     }
 }, {
     tableName: 'usuario', 
