@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-const sqlPath = path.join(process.cwd(), 'database', 'fotaza_db_ian.sql');
+const sqlPath = path.join(process.cwd(), 'database', 'schema.sql');
 const DB_NAME = (!process.env.DB_NAME || process.env.DB_NAME === 'postgres') ? 'fotaza_db_ian' : process.env.DB_NAME;
 
 function parsearConsultasSql(sqlText) {
@@ -14,124 +14,83 @@ function parsearConsultasSql(sqlText) {
 
     for (let line of lines) {
         const trimmed = line.trim();
-
-        if (trimmed.startsWith('--') || trimmed.startsWith('\\') || trimmed === '') {
-            continue;
-        }
-
-        if (trimmed.toUpperCase().startsWith('SET ') || trimmed.toUpperCase().startsWith('SELECT PG_CATALOG.SET_CONFIG')) {
-            continue;
-        }
+        if (trimmed.startsWith('--') || trimmed.startsWith('\\') || trimmed === '') continue;
+        if (trimmed.toUpperCase().startsWith('SET ') || trimmed.toUpperCase().startsWith('SELECT PG_CATALOG.SET_CONFIG')) continue;
 
         currentQuery += line + '\n';
-
         if (line.includes('$$') || line.includes('$function$')) {
             inDollarBlock = !inDollarBlock;
         }
-
         if (trimmed.endsWith(';') && !inDollarBlock) {
-            if (currentQuery.trim()) {
-                queries.push(currentQuery.trim());
-            }
+            if (currentQuery.trim()) queries.push(currentQuery.trim());
             currentQuery = '';
         }
-    }
-
-    if (currentQuery.trim()) {
-        queries.push(currentQuery.trim());
     }
     return queries;
 }
 
-async function inicializarBaseDeDatos() {
-    const clientInicial = new Client({
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'postgres',
+async function inicializarEstructura() {
+    
+    const clientPostgres = new Client({
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
         password: process.env.DB_PASSWORD,
+        port: process.env.DB_PORT,
         database: 'postgres',
-        port: process.env.DB_PORT || 5432,
     });
 
     try {
-        console.log('Leyendo archivo SQL local');
-        if (!fs.existsSync(sqlPath)) {
-            throw new Error(`No se encontró el archivo SQL en: ${sqlPath}`);
+        await clientPostgres.connect();
+        const res = await clientPostgres.query(`SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'`);
+        if (res.rowCount === 0) {
+            console.log(`Creando base de datos '${DB_NAME}'...`);
+            await clientPostgres.query(`CREATE DATABASE ${DB_NAME}`);
         }
-        const sqlTexto = fs.readFileSync(sqlPath, 'utf8');
+    } catch (err) {
+        console.error('Error al verificar/crear la base de datos base:', err.message);
+    } finally {
+        await clientPostgres.end();
+    }
 
-        console.log('Conectando al servidor Postgres local');
-        await clientInicial.connect();
+   
+    const clientFinal = new Client({
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        password: process.env.DB_PASSWORD,
+        port: process.env.DB_PORT,
+        database: DB_NAME,
+    });
 
-        console.log(`Recreando base de datos desde cero (${DB_NAME})`);
-        await clientInicial.query(`
-            SELECT pg_terminate_backend(pg_stat_activity.pid)
-            FROM pg_stat_activity
-            WHERE pg_stat_activity.datname = '${DB_NAME}' AND pid <> pg_backend_pid();
-        `);
-        await clientInicial.query(`DROP DATABASE IF EXISTS ${DB_NAME};`);
-        await clientInicial.query(`CREATE DATABASE ${DB_NAME};`);
-        await clientInicial.end();
-
-        console.log(`Conectando a la nueva base de datos '${DB_NAME}'`);
-        const clientFinal = new Client({
-            host: process.env.DB_HOST || 'localhost',
-            user: process.env.DB_USER || 'postgres',
-            password: process.env.DB_PASSWORD,
-            database: DB_NAME,
-            port: process.env.DB_PORT || 5432,
-        });
-
+    try {
         await clientFinal.connect();
+        console.log(`Conectado a '${DB_NAME}'. Limpiando esquema anterior`);
+        
+        
 
-        console.log('trigger');
-        // Creamos las funciones en el Postgres local antes de leer el archivo .sql
-        await clientFinal.query(`
-            CREATE OR REPLACE FUNCTION public.fn_after_image_report_insert()
-            RETURNS trigger LANGUAGE plpgsql AS $$
-            DECLARE
-                v_post_id integer;
-            BEGIN
-                SELECT post_id INTO v_post_id FROM public.images WHERE id = NEW.image_id;
-                IF v_post_id IS NOT NULL THEN
-                    UPDATE public.post SET report_count = report_count + 1 WHERE id = v_post_id;
-                END IF;
-                RETURN NEW;
-            END; $$;
-        `);
+        await clientFinal.query('DROP SCHEMA public CASCADE;');
+        await clientFinal.query('CREATE SCHEMA public;');
 
-        await clientFinal.query(`
-            CREATE OR REPLACE FUNCTION public.fn_after_post_status_update()
-            RETURNS trigger LANGUAGE plpgsql AS $$
-            BEGIN
-                IF NEW.status = 'pending' THEN
-                    INSERT INTO public.validator_queue (post_id, status)
-                    VALUES (NEW.id, 'pending')
-                    ON CONFLICT (post_id) DO NOTHING;
-                END IF;
-                RETURN NEW;
-            END; $$;
-        `);
-
-        console.log('Procesando e insertando sentencias SQL');
+        console.log('Leyendo archivo schema.sql');
+        const sqlTexto = fs.readFileSync(sqlPath, 'utf8');
         const consultas = parsearConsultasSql(sqlTexto);
 
+        console.log(`Ejecutando ${consultas.length} sentencias de estructura`);
         for (let i = 0; i < consultas.length; i++) {
             try {
                 await clientFinal.query(consultas[i]);
             } catch (err) {
                 if (!consultas[i].toUpperCase().includes('OWNER TO')) {
-                    console.warn(`Advertencia en bloque ${i + 1}: ${err.message}`);
+                    console.warn(`Advertencia en bloque estructura ${i + 1}: ${err.message}`);
                 }
             }
         }
 
-        console.log(`\nBase de datos local '${DB_NAME}' finalizado con exito`);
-        await clientFinal.end();
-
+        console.log(`\n¡Estructura de '${DB_NAME}' inicializada con éxito!`);
     } catch (error) {
-        console.error('Error:', error.message);
-        try { await clientInicial.end(); } catch (_) { }
+        console.error('Error crítico en db-init:', error.message);
+    } finally {
+        await clientFinal.end();
     }
 }
 
-inicializarBaseDeDatos();
+inicializarEstructura();

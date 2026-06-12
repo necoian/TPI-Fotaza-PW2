@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "db:init": "node scripts/db-init.js"
+  "start": "node app.js",
+  "dev": "nodemon app.js",
+  "db:init": "node ./scripts/db-init.js",
+  "db:seeds": "node ./scripts/db-seeds.js",
+  "db:setup": "npm run db:init && npm run db:seeds"
   },
   "repository": {
     "type": "git",
