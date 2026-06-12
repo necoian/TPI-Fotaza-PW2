@@ -24,7 +24,7 @@ block content
                     .follow-box(style="margin-top: 15px; margin-bottom: 15px;")
                         span Creador: 
                             a(href=`/user/perfil/${post.Usuario.id}` style="text-decoration: none; color: var(--ink-blue); font-weight: bold;")
-                                | @#{post.Usuario.username}
+                                | #{post.Usuario.username}
                         form(action=`/user/follow/${post.Usuario.id}`, method="POST", style="display:inline; margin-left: 10px;")
                             if loEstoySiguiendo
                                 button.ink-btn(type="submit" style="background: #6c757d; color: white; padding: 4px 10px; font-size: 0.9rem;") Dejar de seguir
@@ -75,7 +75,7 @@ block content
                         .comentario-item-ink
                             .comentario-header
                                 a(href=`/user/perfil/${com.Usuario.id}` style="text-decoration: none; color: inherit;")
-                                    strong @#{com.Usuario.username}
+                                    strong #{com.Usuario.username}
                                 span #{new Date(com.created_at).toLocaleDateString()}
                             p #{com.text}
 
