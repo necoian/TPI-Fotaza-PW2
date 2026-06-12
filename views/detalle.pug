@@ -21,15 +21,15 @@ block content
 
                 
                 if usuarioLogueado && post.Usuario && usuarioLogueado.id !== post.Usuario.id
-                    .follow-box(style="margin-top: 15px; margin-bottom: 15px;")
+                    .follow-box.ink-follow-box
                         span Creador: 
-                            a(href=`/user/perfil/${post.Usuario.id}` style="text-decoration: none; color: var(--ink-blue); font-weight: bold;")
+                            a.ink-follow-link(href=`/user/perfil/${post.Usuario.id}`)
                                 | #{post.Usuario.username}
-                        form(action=`/user/follow/${post.Usuario.id}`, method="POST", style="display:inline; margin-left: 10px;")
+                        form.ink-form-inline(action=`/user/follow/${post.Usuario.id}`, method="POST")
                             if loEstoySiguiendo
-                                button.ink-btn(type="submit" style="background: #6c757d; color: white; padding: 4px 10px; font-size: 0.9rem;") Dejar de seguir
+                                button.ink-btn.ink-btn-unfollow(type="submit") Dejar de seguir
                             else
-                                button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem;") Seguir
+                                button.ink-btn.ink-btn-follow(type="submit") Seguir
                                 
             
             .ink-interacciones-bloque
@@ -37,7 +37,7 @@ block content
                 if usuarioLogueado
                     form(action=`/post/${post.id}/interesar` method="POST")
                         if yaInteresado
-                            button.ink-btn(type="submit" style="background: var(--ink-blue); color: var(--paper-white);") Quitar de Me Gusta
+                            button.ink-btn.ink-btn-liked(type="submit") Quitar de Me Gusta
                         else
                             button.ink-btn(type="submit") Me Gusta
                 
@@ -54,13 +54,13 @@ block content
                             option(value="5") 5 - Obra Maestra
 
                 
-                .promedio-box(style="font-family: 'Architects Daughter', cursive; font-weight: bold; font-size: 1.1rem;")
+                .promedio-box.ink-promedio-box
                     span Puntuación: #{promedioEstrellas > 0 ? `${promedioEstrellas} / 5.0 ` : 'Sin calificaciones aún'}
 
                 
                 if usuarioLogueado && usuarioLogueado.id === post.user_id
-                    form(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.');" style="display: inline-block; margin-left: auto;")
-                        button.ink-btn(type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; cursor: pointer;")
+                    form.ink-form-delete(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.');")
+                        button.ink-btn.ink-btn-delete(type="submit")
                             | Eliminar Publicación
 
         
@@ -74,7 +74,7 @@ block content
                     each com in comentarios
                         .comentario-item-ink
                             .comentario-header
-                                a(href=`/user/perfil/${com.Usuario.id}` style="text-decoration: none; color: inherit;")
+                                a.ink-comment-author-link(href=`/user/perfil/${com.Usuario.id}`)
                                     strong #{com.Usuario.username}
                                 span #{new Date(com.created_at).toLocaleDateString()}
                             p #{com.text}
@@ -87,12 +87,12 @@ block content
                     form.ink-form(action=`/post/${post.id}/comentar`, method="POST")
                         .form-group
                             textarea.ink-input(name="text", rows="3", placeholder="Escribe un comentario", required=true)
-                        div(style="text-align: right; margin-top: 10px;")
+                        div.ink-text-right-margin
                             input.ink-btn(type="submit" value="Publicar Comentario")
                 else
                     p.msg-alerta.alerta-advertencia
                         | Debes 
                         a(href="/login") iniciar sesión
-                        |   para dejar un comentario en esta publicación.
+                        |    para dejar un comentario en esta publicación.
             else
                 p.msg-alerta.alerta-error Los comentarios han sido desactivados para esta publicación.

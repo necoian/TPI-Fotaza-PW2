@@ -1,68 +1,61 @@
 extends layout
 
 block content
-  .container(style="max-width: 800px; margin: 40px auto; padding: 20px;")
+  .container.ink-profile-container
     
-    .perfil-header(style="text-align: center; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center;")
+    .perfil-header.ink-profile-header
       
-      .avatar(style="margin-bottom: 20px;")
+      .avatar.ink-profile-avatar-box
         if perfilUsuario.avatar_url && perfilUsuario.avatar_url.trim() !== ''
-          img(src=perfilUsuario.avatar_url, 
-              alt=perfilUsuario.username, 
-              style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.1);")
+          img.ink-profile-avatar-img(src=perfilUsuario.avatar_url, alt=perfilUsuario.username)
         else
-          div(style="width: 150px; height: 150px; border-radius: 50%; background: #007bff; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; font-weight: bold; border: 4px solid #007bff;")
+          .ink-profile-avatar-placeholder
             | #{perfilUsuario.username.charAt(0).toUpperCase()}
       
-      h1(style="margin-top: 10px;") #{perfilUsuario.username}
+      h1.ink-profile-title #{perfilUsuario.username}
 
-      .stats(style="display: flex; justify-content: center; gap: 30px; margin: 20px 0;")
-        - var textoEstilo = "font-size: 0.9rem; color: #666; margin-top: 4px;"
-        - var textoInteractivoEstilo = "font-size: 0.9rem; color: #666; margin-top: 4px; cursor: pointer; user-select: none;"
-        - var numeroEstilo = "font-size: 1.2rem; font-weight: bold; color: #333;"
+      .stats.ink-profile-stats
         
-        div(style="text-align: center; position: relative;")
-          div(style=numeroEstilo) #{seguidoresContador}
-          div(style=textoInteractivoEstilo, onclick=`mostrarLista(${perfilUsuario.id}, 'seguidores')`) Seguidores
+        .ink-profile-stat-block
+          .ink-profile-stat-number #{seguidoresContador}
+          .ink-profile-stat-interactive(onclick=`mostrarLista(${perfilUsuario.id}, 'seguidores')`) Seguidores
           
-          div(id="lista-seguidores" style="display:none; border: 1px solid #ddd; padding: 10px; margin-top: 5px; background: white; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; min-width: 120px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);")
-            ul(id="contenido-lista-seguidores" style="list-style:none; padding:0; margin:0; font-size: 0.9rem; color: #333;")
+          .ink-profile-dropdown(id="lista-seguidores")
+            ul.ink-profile-dropdown-list(id="contenido-lista-seguidores")
         
-        div(style="text-align: center; position: relative;")
-          div(style=numeroEstilo) #{seguidosContador}
-          div(style=textoInteractivoEstilo, onclick=`mostrarLista(${perfilUsuario.id}, 'seguidos')`) Seguidos
+        .ink-profile-stat-block
+          .ink-profile-stat-number #{seguidosContador}
+          .ink-profile-stat-interactive(onclick=`mostrarLista(${perfilUsuario.id}, 'seguidos')`) Seguidos
           
-          div(id="lista-seguidos" style="display:none; border: 1px solid #ddd; padding: 10px; margin-top: 5px; background: white; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; min-width: 120px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);")
-            ul(id="contenido-lista-seguidos" style="list-style:none; padding:0; margin:0; font-size: 0.9rem; color: #333;")
+          .ink-profile-dropdown(id="lista-seguidos")
+            ul.ink-profile-dropdown-list(id="contenido-lista-seguidos")
         
-        div(style="text-align: center;")
-          div(style=numeroEstilo) #{postsUsuario.length}
-          div(style=textoEstilo) Publicaciones
+        .ink-profile-stat-block
+          .ink-profile-stat-number #{postsUsuario.length}
+          .ink-profile-stat-text Publicaciones
 
       if usuarioLogueado && usuarioLogueado.id !== perfilUsuario.id
-        form(action=`/user/follow/${perfilUsuario.id}`, method="POST", style="margin-top: 15px;")
+        form.ink-profile-follow-form(action=`/user/follow/${perfilUsuario.id}`, method="POST")
           if loEstoySiguiendo
-            button.ink-btn(type="submit" style="background: #6c757d; color: white; padding: 4px 10px; font-size: 0.9rem; border: none; cursor: pointer; border-radius: 4px;") 
+            button.ink-btn.ink-profile-btn-unfollow(type="submit") 
               | Dejar de seguir
           else
-            button.ink-btn(type="submit" style="background: var(--ink-blue); color: white; padding: 4px 10px; font-size: 0.9rem; border: none; cursor: pointer; border-radius: 4px;") 
+            button.ink-btn.ink-profile-btn-follow(type="submit") 
               | Seguir
 
-    
-    .galeria(style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;")
+    .galeria.ink-profile-galeria
       each post in postsUsuario
-        div(style="position: relative;") 
+        .ink-profile-post-block
           if post.Images && post.Images.length > 0
             a(href=`/post/${post.id}`)
-              img(src=post.Images[0].file_path, style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; display: block;")
+              img.ink-profile-post-img(src=post.Images[0].file_path)
           else
-            div(style="background: #eee; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;") 
+            .ink-profile-post-placeholder 
               | Sin imagen
 
-          
           if usuarioLogueado && usuarioLogueado.id === perfilUsuario.id
-            form(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? Esta acción no se puede deshacer.');" style="position: absolute; top: 10px; right: 10px; margin: 0;")
-              button.ink-btn(type="submit" style="background: rgba(220, 53, 69, 0.9); color: white; padding: 4px 8px; font-size: 0.75rem; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);")
+            form.ink-profile-form-delete(action=`/post/${post.id}/eliminar`, method="POST", onsubmit="return confirm('¿Seguro que querés borrar esta publicación? This action cannot be undone.');")
+              button.ink-btn.ink-profile-btn-delete(type="submit")
                 | Borrar
 
   script.
@@ -82,9 +75,9 @@ block content
             const usuarios = await response.json();
 
             if (usuarios.length > 0) {
-                lista.innerHTML = usuarios.map(u => `<li style="padding: 4px 0; border-bottom: 1px solid #f5f5f5;">@${u}</li>`).join('');
+                lista.innerHTML = usuarios.map(u => `<li>@${u}</li>`).join('');
             } else {
-                lista.innerHTML = '<li style="color: #999;">Ninguno</li>';
+                lista.innerHTML = '<li>Ninguno</li>';
             }
             contenedor.style.display = 'block';
         } catch (error) {
