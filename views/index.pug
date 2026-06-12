@@ -2,76 +2,108 @@ extends layout
 
 block content
   .container(style="max-width: 1200px; margin: 0 auto; padding: 20px;")
-    h1(style="text-align: center; margin-bottom: 30px;") Donde todo comienza
+    h1(style="text-align: center; margin-bottom: 20px;") Donde todo comienza
     
     
+    .contenedor-buscador(style="max-width: 500px; margin: 0 auto 40px auto; display: flex; gap: 10px;")
+      form(action="/" method="GET" style="display: flex; width: 100%; gap: 10px;")
+        input.ink-input(
+          type="text" 
+          name="search" 
+          placeholder="Buscar publicaciones por título o descripción..." 
+          value=search || ''
+          style="flex-grow: 1; padding: 10px; font-family: inherit;"
+        )
+        button.ink-btn(type="submit" style="padding: 10px 20px;") Buscar
+        if search
+          a.ink-btn(href="/" style="background: #ccc; color: #333; padding: 10px 15px; text-decoration: none; align-content: center;") X
+
     .galeria#grilla-home
       if postsIniciales && postsIniciales.length > 0
         each post in postsIniciales
-          
           .tarjeta-foto.ink-box
             if post.Images && post.Images.length > 0
-              a(href=`/post/${post.id}`)
-                img.ink-img(src=post.Images[0].file_path, alt=post.title)
+              - const imagen = post.Images[0]
+              if imagen.license === 'copyright' && !usuarioLogueado
+                div.ink-img(style="background: rgba(0, 0, 0, 0.85); color: #fff; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-style: italic; padding: 10px; text-align: center; box-sizing: border-box;") 
+                  span Imagen Protegida
+                  small(style="font-size: 0.75rem; margin-top: 5px; opacity: 0.8;") Inicia sesión para ver este contenido con Copyright.
+              else
+                a(href=`/post/${post.id}`)
+                  img.ink-img(src=imagen.file_path, alt=post.title)
             else
               div.ink-img(style="background: #eee; height: 180px; display: flex; align-items: center; justify-content: center; font-style: italic; opacity: 0.7;") 
                 | Sin imagen
-            
             
             h3(style="font-size: 1.1rem; margin: 10px 0 5px 0; text-align: center;") #{post.title}
             
             if post.description
               p.foto-descripcion #{post.description}
             
-            
             .tarjeta-footer
               a.ink-btn(href=`/post/${post.id}`) Ver Detalle
       else
-        p.no-results No hay publicaciones disponibles en este momento.
+        p.no-results(style="text-align: center; grid-column: 1 / -1; font-style: italic; color: #666;") No se encontraron publicaciones para tu búsqueda.
 
-    
     .contenedor-ver-mas(style="text-align: center; margin-top: 50px;")
       button#btn-ver-mas.ink-btn(
         onclick="cargarMasPosts()", 
         style=tieneMasInicial ? "display: inline-block;" : "display: none;"
       ) Ver más
 
-  
   script.
     let offsetActual = 8; 
     const limite = 8;
+
+   
+    const estaLogueadoInicial = !{usuarioLogueado ? 'true' : 'false'};
+    const terminoBusqueda = "!{search || ''}";
 
     async function cargarMasPosts() {
         const btn = document.getElementById('btn-ver-mas');
         const grilla = document.getElementById('grilla-home');
         
-        btn.innerText = "Cargando...";
+        btn.innerText = "Cargando";
         btn.disabled = true;
 
         try {
-            const response = await fetch(`/?limit=${limite}&offset=${offsetActual}`, {
+            
+            const response = await fetch(`/?limit=${limite}&offset=${offsetActual}&search=${encodeURIComponent(terminoBusqueda)}`, {
                 headers: { 'Accept': 'application/json' }
             });
             const data = await response.json();
 
+            const usuarioAutenticado = data.esAutenticado !== undefined ? data.esAutenticado : estaLogueadoInicial;
+
             if (data.posts && data.posts.length > 0) {
                 data.posts.forEach(post => {
-                    
                     const imagenesAsociadas = post.Images || post.images || [];
                     const tieneImagen = imagenesAsociadas.length > 0;
                     
-                    const imgHtml = tieneImagen 
-                        ? `<img class="ink-img" src="${imagenesAsociadas[0].file_path}" alt="${post.title}">`
-                        : `<div class="ink-img" style="background: #eee; height: 180px; display: flex; align-items: center; justify-content: center; font-style: italic; opacity: 0.7;">Sin imagen</div>`;
+                    let imgHtml = '';
+                    
+                    if (tieneImagen) {
+                        const imgObj = imagenesAsociadas[0];
+                        if (imgObj.license === 'copyright' && !usuarioAutenticado) {
+                            imgHtml = `
+                                <div class="ink-img" style="background: #222; color: #fff; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-style: italic; padding: 10px; text-align: center; box-sizing: border-box;">
+                                    <span>Imagen Protegida</span>
+                                    <small style="font-size: 0.75rem; margin-top: 5px; opacity: 0.8;">Inicia sesión para ver este contenido con Copyright.</small>
+                                </div>`;
+                        } else {
+                            imgHtml = `<a href="/post/${post.id}"><img class="ink-img" src="${imgObj.file_path}" alt="${post.title}"></a>`;
+                        }
+                    } else {
+                        imgHtml = `<div class="ink-img" style="background: #eee; height: 180px; display: flex; align-items: center; justify-content: center; font-style: italic; opacity: 0.7;">Sin imagen</div>`;
+                    }
 
                     const descHtml = post.description 
                         ? `<p class="foto-descripcion">${post.description}</p>` 
                         : '';
 
-                    
                     const postHtml = `
                         <div class="tarjeta-foto ink-box">
-                            <a href="/post/${post.id}">${imgHtml}</a>
+                            ${imgHtml}
                             <h3 style="font-size: 1.1rem; margin: 10px 0 5px 0; text-align: center;">${post.title}</h3>
                             ${descHtml}
                             <div class="tarjeta-footer">

@@ -1,6 +1,7 @@
 const sequelize = require('../config/db');
 const { Post, Image, Comment, Usuario, Rating, Interested, Follower } = require('../models/Index');
 const cloudinary = require('../config/cloudinary');
+const { Op } = require('sequelize');
 
 exports.verDetalle = async (req, res) => {
     try {
@@ -421,10 +422,20 @@ exports.obtenerHome = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 8;
         const offset = parseInt(req.query.offset) || 0;
+        const search = req.query.search || ''; 
         const usuarioLogueado = req.session && req.session.usuario ? req.session.usuario : null;
 
         
+        const donde = {};
+        if (search.trim() !== '') {
+            donde[Op.or] = [
+                { title: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } }
+            ];
+        }
+
         const { count, rows: posts } = await Post.findAndCountAll({
+            where: donde, 
             limit: limit,
             offset: offset,
             order: [['created_at', 'DESC']], 
@@ -436,23 +447,23 @@ exports.obtenerHome = async (req, res) => {
             ]
         });
 
-        
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
             return res.json({
                 posts: posts,
-                tieneMas: offset + limit < count
+                tieneMas: offset + limit < count,
+                esAutenticado: !!usuarioLogueado
             });
         }
 
-        
         res.render('index', { 
             postsIniciales: posts, 
             tieneMasInicial: limit < count,
-            usuarioLogueado: usuarioLogueado 
+            usuarioLogueado: usuarioLogueado,
+            search: search 
         });
 
     } catch (error) {
         console.error("Error en obtenerHome:", error);
-        res.status(500).send("Error interno del servidor.");
+        res.status(500).send("Error al cargar las publicaciones.");
     }
 };
