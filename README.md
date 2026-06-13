@@ -28,14 +28,18 @@ Se recuerda tener npm instalado previamente en la computadora.
 ### 1. Clonar el repositorio
 
 Pueden clonarlo de la manera que les parezca más cómoda, les recomiendo posicionarse sobre la carpeta donde clonarán el proyecto, luego colocar el siguiente comando en su terminal:
-git clone https://github.com/necoian/TPI-Fotaza-PW2.git
+
+_git clone https://github.com/necoian/TPI-Fotaza-PW2.git_
 
 
 ### 2. Instalar las dependencias
 
 Hay que posicionarse sobre la carpeta TPI-Fotaza-PW2:
+
 _cd TPI-Fotaza-PW2_
+
 Coloca en la terminal:
+
 _npm install_
 
 ### 3. Configurar las variables de entorno .env
