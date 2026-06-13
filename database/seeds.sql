@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict t0fmnySANshu8ZdqhrA5Ftl2aXEJWNrCmsLkxcPt4kycQWmuhC0AUUCb2OG4rt0
+\restrict w3fbkHx7G7dlDFKbJ5q6FLyrZSgg1B1nxgCbL14EmIlMV0DoYI03nVHf1WsLm9G
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.4
@@ -34,6 +34,8 @@ INSERT INTO public.roles (id, name, description) VALUES (2, 'Usuario', 'Tiene pe
 INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (1, 'elAdmin', 'ianecoloboox767@gmail.com', '$2b$10$xV77zH/LiJruWju2U8jOSuqAqJB19aymy2yU7uaLCuxS9gy3gX7ze', 'ADMINISTRADOR', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/admin_zpj5ay.png', 'Soy el administrador, me encargo de que esta página funcione de manera correcta', 1, true, 0, '2026-06-01 01:26:16');
 INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (2, 'RominaTolosa', 'tolousaromi@gmail.com', '$2b$10$INlfPkLFiPhMhda.JT.UVOAnJ2a9SWT91eb13L2nddPr9StSgcVWW', 'Romina Tolosa', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/Usuario1_dlvjvx.png', 'Amo a mi perrita y amo tomar mates', 2, true, 0, '2026-06-01 01:33:20');
 INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (3, 'IanPereyra', '0108.facultad@gmail.com', '$2b$10$hAnhwY/2GSW/wVydnavmsOv2dHsuJyh5l4F5sDgRFqKf5YWpTdEsi', 'Ian Pereyra', 'https://res.cloudinary.com/dxyufgghc/image/upload/v1780276990/Usuario2_pyclch.png', 'me gusta mucho programar y jugar videojuegos', 2, true, 0, '2026-06-01 01:33:20');
+INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (4, 'galletita', 'galletita@gmail.com', '$2b$10$8vjX0cLs28RPk7SfMjm5beQozPPCPNs.pa0yw06QbAv5YQfbbvuZW', NULL, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1781306250/fotaza_avatares/i9wynnurrvg1fnjqq5bw.png', NULL, 2, true, 0, '2026-06-12 23:17:33.586519');
+INSERT INTO public.usuario (id, username, email, password_hash, display_name, avatar_url, bio, role_id, is_active, strikes, created_at) VALUES (5, 'galletita2', 'galletita2@gmail.com', '$2b$10$VWc0G3dRTn4XM43cPEU59eEWxwSAorTdqS3w0nmX4UEiUKKDN6noq', NULL, 'https://res.cloudinary.com/dxyufgghc/image/upload/v1781306976/fotaza_avatares/hbd87qjgqam539xcwxvp.png', NULL, 2, true, 0, '2026-06-12 23:29:39.18274');
 
 
 --
@@ -66,6 +68,14 @@ INSERT INTO public.post (id, user_id, title, description, status, comments_open,
 -- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (1, 7, 3, 'Me encantó!', false, '2026-06-12 22:45:34.759');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (2, 2, 3, 'Podría ser mejor', false, '2026-06-12 22:46:22.59');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (3, 5, 3, 'Denle amor', false, '2026-06-12 22:50:14.925');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (4, 5, 2, 'Cornudo', false, '2026-06-12 22:51:14.019');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (5, 3, 2, 'Que hermosura', false, '2026-06-12 22:52:19.075');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (6, 2, 2, 'No seaas asii', false, '2026-06-12 23:04:09.192');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (7, 8, 4, 'muy buena obra', false, '2026-06-12 23:18:20.612');
+INSERT INTO public.comments (uniqueid, post_id, user_id, body, is_deleted, created_at) VALUES (8, 7, 5, 'muy bonito', false, '2026-06-12 23:30:17.305');
 
 
 --
@@ -84,6 +94,8 @@ INSERT INTO public.post (id, user_id, title, description, status, comments_open,
 -- Data for Name: followers; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+INSERT INTO public.followers (follower_id, following_id, created_at) VALUES (3, 2, '2026-06-12 22:44:29.411');
+INSERT INTO public.followers (follower_id, following_id, created_at) VALUES (2, 3, '2026-06-12 22:51:35.006');
 
 
 --
@@ -110,6 +122,12 @@ INSERT INTO public.images (id, post_id, file_path, license, watermark_text, orde
 -- Data for Name: interested; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (3, 8, '2026-06-12 22:44:38.135');
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (3, 2, '2026-06-12 22:46:02.417');
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (3, 6, '2026-06-12 22:46:39.706');
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (2, 3, '2026-06-12 22:52:25.361');
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (4, 9, '2026-06-12 23:18:09.35');
+INSERT INTO public.interested (user_id, image_id, created_at) VALUES (5, 8, '2026-06-12 23:30:07.083');
 
 
 --
@@ -140,6 +158,12 @@ INSERT INTO public.images (id, post_id, file_path, license, watermark_text, orde
 -- Data for Name: ratings; Type: TABLE DATA; Schema: public; Owner: -
 --
 
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (1, 8, 3, 5, '2026-06-12 22:45:18.612');
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (2, 2, 3, 3, '2026-06-12 22:46:09.275');
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (3, 5, 2, 1, '2026-06-12 22:51:27.364');
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (4, 3, 2, 5, '2026-06-12 22:52:09.337');
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (5, 9, 4, 5, '2026-06-12 23:18:13.052');
+INSERT INTO public.ratings (id, image_id, user_id, score, created_at) VALUES (6, 8, 5, 5, '2026-06-12 23:30:11.051');
 
 
 --
@@ -166,7 +190,7 @@ SELECT pg_catalog.setval('public.comment_report_id_seq', 1, false);
 -- Name: comments_uniqueid_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.comments_uniqueid_seq', 1, false);
+SELECT pg_catalog.setval('public.comments_uniqueid_seq', 8, true);
 
 
 --
@@ -180,7 +204,7 @@ SELECT pg_catalog.setval('public.image_report_id_seq', 1, false);
 -- Name: images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.images_id_seq', 9, true);
+SELECT pg_catalog.setval('public.images_id_seq', 13, true);
 
 
 --
@@ -201,14 +225,14 @@ SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
 -- Name: post_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.post_id_seq', 8, true);
+SELECT pg_catalog.setval('public.post_id_seq', 12, true);
 
 
 --
 -- Name: ratings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ratings_id_seq', 1, false);
+SELECT pg_catalog.setval('public.ratings_id_seq', 6, true);
 
 
 --
@@ -236,7 +260,7 @@ SELECT pg_catalog.setval('public.tags_id_seq', 1, false);
 -- Name: usuario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.usuario_id_seq', 3, true);
+SELECT pg_catalog.setval('public.usuario_id_seq', 5, true);
 
 
 --
@@ -250,5 +274,5 @@ SELECT pg_catalog.setval('public.validator_queue_id_seq', 1, false);
 -- PostgreSQL database dump complete
 --
 
-\unrestrict t0fmnySANshu8ZdqhrA5Ftl2aXEJWNrCmsLkxcPt4kycQWmuhC0AUUCb2OG4rt0
+\unrestrict w3fbkHx7G7dlDFKbJ5q6FLyrZSgg1B1nxgCbL14EmIlMV0DoYI03nVHf1WsLm9G
 
